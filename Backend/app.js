@@ -3,7 +3,7 @@ const sql = require('mssql');
 const dotenv = require("dotenv");
 dotenv.config();
 
-const dbConfig = require("./dbConfig");
+const dbConfig = require("../dbConfig");
 const app = express();
 
 
