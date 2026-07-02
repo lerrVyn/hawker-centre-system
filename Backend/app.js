@@ -31,5 +31,12 @@ app.listen(PORT, async () => {
     process.exit(1);
   }
 
+// Routes
+const feedbackRouter = require('./routes/feedback');  
+const likesRouter = require('./routes/likes'); 
+
+app.use('/feedback', feedbackRouter);  
+app.use('/likes', likesRouter);  
+
   console.log(`Server listening on port ${PORT}`);
 });
