@@ -5,3 +5,5 @@ Additionally, the following are commands to be input in VSC terminal to install 
 npm init -y
 npm install express mssql joi dotenv
 ```
+## Note
+Pull before you start working on your code to keep up to date with most recent version of the project
