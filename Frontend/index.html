@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Hawker Centre - SA-37/SA-38 Demo</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; color: #222; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; margin-top: 0; }
+  .container { max-width: 800px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  input, select, textarea, button { font-size: 14px; padding: 8px; margin: 4px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
+  button { background: #d97706; color: white; border: none; cursor: pointer; width: auto; padding: 8px 16px; }
+  button:hover { background: #b45309; }
+  button.secondary { background: #6b7280; }
+  button.danger { background: #dc2626; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  .status { font-size: 13px; padding: 8px; border-radius: 4px; margin-top: 8px; white-space: pre-wrap; }
+  .status.ok { background: #dcfce7; color: #166534; }
+  .status.err { background: #fee2e2; color: #991b1b; }
+  .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+  .item:last-child { border-bottom: none; }
+  .hidden { display: none; }
+  .muted { color: #666; font-size: 13px; }
+  .feedback-entry { border-bottom: 1px solid #eee; padding: 8px 0; }
+  .stars { color: #d97706; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🍜 Hawker Centre - Feedback & Likes Demo</h1>
+
+  <!-- AUTH SECTION -->
+  <div class="card" id="authCard">
+    <h2>Login / Register</h2>
+    <div class="row">
+      <input id="authName" placeholder="Name (register only)" />
+    </div>
+    <div class="row">
+      <input id="authEmail" placeholder="Email" />
+      <input id="authPassword" type="password" placeholder="Password" />
+    </div>
+    <div class="row">
+      <button onclick="register()">Register</button>
+      <button onclick="login()" class="secondary">Login</button>
+    </div>
+    <div id="authStatus"></div>
+  </div>
+
+  <!-- LOGGED IN INFO -->
+  <div class="card hidden" id="sessionCard">
+    <h2>Session</h2>
+    <p class="muted">Logged in as <b id="sessionName"></b> (customer_id: <span id="sessionId"></span>)</p>
+    <button class="danger" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- STALLS & MENU -->
+  <div class="card">
+    <h2>Browse Stalls</h2>
+    <select id="stallSelect" onchange="onStallChange()">
+      <option value="">-- Select a stall --</option>
+    </select>
+    <div id="menuList"></div>
+  </div>
+
+  <!-- FEEDBACK SECTION -->
+  <div class="card">
+    <h2>Submit Feedback (requires login)</h2>
+    <div class="row">
+      <select id="feedbackRating">
+        <option value="5">5 - Excellent</option>
+        <option value="4">4 - Good</option>
+        <option value="3">3 - Okay</option>
+        <option value="2">2 - Poor</option>
+        <option value="1">1 - Terrible</option>
+      </select>
+    </div>
+    <textarea id="feedbackComment" placeholder="Your comment..."></textarea>
+    <button onclick="submitFeedback()">Submit Feedback</button>
+    <div id="feedbackStatus"></div>
+
+    <h2 style="margin-top:20px;">Feedback for this stall</h2>
+    <div id="feedbackList" class="muted">Select a stall above to see feedback.</div>
+  </div>
+</div>
+
+<script>
+const API = ""; // same origin (served by Express)
+let token = localStorage.getItem("token") || null;
+let customerId = localStorage.getItem("customer_id") || null;
+let customerName = localStorage.getItem("customer_name") || null;
+let selectedStallId = null;
+
+function showStatus(elId, message, ok) {
+  const el = document.getElementById(elId);
+  el.className = "status " + (ok ? "ok" : "err");
+  el.textContent = message;
+}
+
+function updateSessionUI() {
+  if (token) {
+    document.getElementById("sessionCard").classList.remove("hidden");
+    document.getElementById("authCard").classList.add("hidden");
+    document.getElementById("sessionName").textContent = customerName;
+    document.getElementById("sessionId").textContent = customerId;
+  } else {
+    document.getElementById("sessionCard").classList.add("hidden");
+    document.getElementById("authCard").classList.remove("hidden");
+  }
+}
+
+async function register() {
+  const name = document.getElementById("authName").value;
+  const email = document.getElementById("authEmail").value;
+  const password = document.getElementById("authPassword").value;
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    showStatus("authStatus", res.ok ? "Registered! Now log in." : data.error, res.ok);
+  } catch (err) {
+    showStatus("authStatus", "Network error: " + err.message, false);
+  }
+}
+
+async function login() {
+  const email = document.getElementById("authEmail").value;
+  const password = document.getElementById("authPassword").value;
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      token = data.token;
+      customerId = data.customer_id;
+      customerName = data.name;
+      localStorage.setItem("token", token);
+      localStorage.setItem("customer_id", customerId);
+      localStorage.setItem("customer_name", customerName);
+      showStatus("authStatus", "Login successful!", true);
+      updateSessionUI();
+    } else {
+      showStatus("authStatus", data.error, false);
+    }
+  } catch (err) {
+    showStatus("authStatus", "Network error: " + err.message, false);
+  }
+}
+
+function logout() {
+  token = null;
+  customerId = null;
+  customerName = null;
+  localStorage.clear();
+  updateSessionUI();
+}
+
+async function loadStalls() {
+  const res = await fetch(`${API}/catalog/stalls`);
+  const stalls = await res.json();
+  const select = document.getElementById("stallSelect");
+  select.innerHTML = '<option value="">-- Select a stall --</option>';
+  stalls.forEach((s) => {
+    const opt = document.createElement("option");
+    opt.value = s.stall_id;
+    opt.textContent = `${s.stall_name} (${s.cuisine_type || "N/A"})`;
+    select.appendChild(opt);
+  });
+}
+
+async function onStallChange() {
+  const stallId = document.getElementById("stallSelect").value;
+  selectedStallId = stallId || null;
+  if (!stallId) {
+    document.getElementById("menuList").innerHTML = "";
+    document.getElementById("feedbackList").innerHTML = "Select a stall above to see feedback.";
+    return;
+  }
+  await loadMenuItems(stallId);
+  await loadFeedback(stallId);
+}
+
+async function loadMenuItems(stallId) {
+  const res = await fetch(`${API}/catalog/menu-items/${stallId}`);
+  const items = await res.json();
+  const container = document.getElementById("menuList");
+  container.innerHTML = "";
+  for (const item of items) {
+    const likeRes = await fetch(`${API}/likes/item/${item.item_id}`);
+    const likeData = await likeRes.json();
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <span>${item.item_name} - $${item.price}</span>
+      <span>
+        <span class="muted">${likeData.count} like(s)</span>
+        <button style="width:auto;display:inline-block;margin-left:8px;" onclick="likeItem(${item.item_id})">Like</button>
+        <button style="width:auto;display:inline-block;" class="secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
+      </span>
+    `;
+    container.appendChild(div);
+  }
+}
+
+async function likeItem(itemId) {
+  if (!token) return alert("Please log in first.");
+  const res = await fetch(`${API}/likes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ item_id: itemId }),
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  await loadMenuItems(selectedStallId);
+}
+
+async function unlikeItem(itemId) {
+  if (!token) return alert("Please log in first.");
+  const res = await fetch(`${API}/likes/${itemId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  await loadMenuItems(selectedStallId);
+}
+
+async function submitFeedback() {
+  if (!token) return showStatus("feedbackStatus", "Please log in first.", false);
+  if (!selectedStallId) return showStatus("feedbackStatus", "Please select a stall first.", false);
+
+  const rating = parseInt(document.getElementById("feedbackRating").value);
+  const comment = document.getElementById("feedbackComment").value;
+
+  const res = await fetch(`${API}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ stall_id: parseInt(selectedStallId), rating, comment }),
+  });
+  const data = await res.json();
+  showStatus("feedbackStatus", res.ok ? "Feedback submitted!" : data.error, res.ok);
+  if (res.ok) {
+    document.getElementById("feedbackComment").value = "";
+    await loadFeedback(selectedStallId);
+  }
+}
+
+async function loadFeedback(stallId) {
+  const res = await fetch(`${API}/feedback/stall/${stallId}`);
+  const feedbackList = await res.json();
+  const container = document.getElementById("feedbackList");
+  if (feedbackList.length === 0) {
+    container.innerHTML = '<p class="muted">No feedback yet for this stall.</p>';
+    return;
+  }
+  container.innerHTML = "";
+  feedbackList.forEach((f) => {
+    const div = document.createElement("div");
+    div.className = "feedback-entry";
+    div.innerHTML = `
+      <span class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
+      <b>${f.customer_name}</b>
+      <p style="margin:4px 0;">${f.comment || "(no comment)"}</p>
+      <span class="muted">${new Date(f.created_at).toLocaleString()}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Init
+updateSessionUI();
+loadStalls();
+</script>
+</body>
+</html>
