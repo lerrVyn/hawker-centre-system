@@ -34,9 +34,12 @@ app.listen(PORT, async () => {
 // Routes
 const feedbackRouter = require('./routes/feedback');  
 const likesRouter = require('./routes/likes'); 
+const authRouter = require("./routes/auth");
+
 
 app.use('/feedback', feedbackRouter);  
 app.use('/likes', likesRouter);  
+app.use("/auth", authRouter);
 
   console.log(`Server listening on port ${PORT}`);
 });
