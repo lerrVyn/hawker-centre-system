@@ -2,96 +2,147 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Hawker Centre - SA-37/SA-38 Demo</title>
+<title>Hawker Centre Management System - Customer Demo</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; color: #222; }
-  h1 { font-size: 20px; }
-  h2 { font-size: 16px; margin-top: 0; }
-  .container { max-width: 800px; margin: 0 auto; }
-  .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  input, select, textarea, button { font-size: 14px; padding: 8px; margin: 4px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
-  button { background: #d97706; color: white; border: none; cursor: pointer; width: auto; padding: 8px 16px; }
-  button:hover { background: #b45309; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafaf9; margin: 0; padding: 0; color: #1f2937; }
+  header { background: #b45309; color: white; padding: 20px 24px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid #e5e7eb; }
+  .tab { padding: 10px 18px; cursor: pointer; font-size: 14px; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: #b45309; border-bottom-color: #b45309; font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card { background: #fff; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f0f0ef; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  input, select, textarea, button { font-size: 14px; padding: 9px; margin: 4px 0; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; }
+  button { background: #b45309; color: white; border: none; cursor: pointer; width: auto; padding: 9px 18px; font-weight: 500; }
+  button:hover { background: #92400e; }
   button.secondary { background: #6b7280; }
-  button.danger { background: #dc2626; }
-  .row { display: flex; gap: 8px; align-items: center; }
+  button.small { padding: 6px 12px; font-size: 13px; width: auto; display: inline-block; }
+  .row { display: flex; gap: 8px; align-items: flex-end; }
   .row > * { flex: 1; }
-  .status { font-size: 13px; padding: 8px; border-radius: 4px; margin-top: 8px; white-space: pre-wrap; }
+  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
   .status.ok { background: #dcfce7; color: #166534; }
   .status.err { background: #fee2e2; color: #991b1b; }
-  .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
-  .item:last-child { border-bottom: none; }
-  .hidden { display: none; }
-  .muted { color: #666; font-size: 13px; }
-  .feedback-entry { border-bottom: 1px solid #eee; padding: 8px 0; }
-  .stars { color: #d97706; }
+  .menu-item { border-bottom: 1px solid #f0f0ef; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+  .menu-item:last-child { border-bottom: none; }
+  .muted { color: #6b7280; font-size: 13px; }
+  .feedback-entry { border-bottom: 1px solid #f0f0ef; padding: 10px 0; }
+  .stars { color: #b45309; font-size: 14px; }
+  .badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+  .placeholder { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; border: 2px dashed #e5e7eb; border-radius: 8px; }
 </style>
 </head>
 <body>
+
+<header>
+  <h1>🍜 Hawker Centre Management System</h1>
+  <p>Customer Journey Demo &mdash; Feedback & Likes (SA-37 / SA-38)</p>
+</header>
+
 <div class="container">
-  <h1>🍜 Hawker Centre - Feedback & Likes Demo</h1>
 
-  <!-- AUTH SECTION -->
-  <div class="card" id="authCard">
-    <h2>Login / Register</h2>
-    <div class="row">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('browse')">Browse Stalls</div>
+    <div class="tab" onclick="switchTab('feedback')">Feedback</div>
+    <div class="tab" onclick="switchTab('account')">Account</div>
+    <div class="tab" onclick="switchTab('other')">Other Features</div>
+  </div>
+
+  <!-- ACCOUNT TAB -->
+  <div class="panel" id="panel-account">
+    <div class="card" id="authCard">
+      <h2>Login / Register</h2>
       <input id="authName" placeholder="Name (register only)" />
+      <div class="row">
+        <input id="authEmail" placeholder="Email" />
+        <input id="authPassword" type="password" placeholder="Password" />
+      </div>
+      <div class="row">
+        <button onclick="register()">Register</button>
+        <button onclick="login()" class="secondary">Login</button>
+      </div>
+      <div id="authStatus"></div>
     </div>
-    <div class="row">
-      <input id="authEmail" placeholder="Email" />
-      <input id="authPassword" type="password" placeholder="Password" />
+    <div class="card hidden" id="sessionCard" style="display:none;">
+      <h2>Session</h2>
+      <p class="muted">Logged in as <b id="sessionName"></b> (customer_id: <span id="sessionId"></span>)</p>
+      <button class="secondary" onclick="logout()">Logout</button>
     </div>
-    <div class="row">
-      <button onclick="register()">Register</button>
-      <button onclick="login()" class="secondary">Login</button>
-    </div>
-    <div id="authStatus"></div>
   </div>
 
-  <!-- LOGGED IN INFO -->
-  <div class="card hidden" id="sessionCard">
-    <h2>Session</h2>
-    <p class="muted">Logged in as <b id="sessionName"></b> (customer_id: <span id="sessionId"></span>)</p>
-    <button class="danger" onclick="logout()">Logout</button>
-  </div>
-
-  <!-- STALLS & MENU -->
-  <div class="card">
-    <h2>Browse Stalls</h2>
-    <select id="stallSelect" onchange="onStallChange()">
-      <option value="">-- Select a stall --</option>
-    </select>
-    <div id="menuList"></div>
-  </div>
-
-  <!-- FEEDBACK SECTION -->
-  <div class="card">
-    <h2>Submit Feedback (requires login)</h2>
-    <div class="row">
-      <select id="feedbackRating">
-        <option value="5">5 - Excellent</option>
-        <option value="4">4 - Good</option>
-        <option value="3">3 - Okay</option>
-        <option value="2">2 - Poor</option>
-        <option value="1">1 - Terrible</option>
+  <!-- BROWSE TAB -->
+  <div class="panel active" id="panel-browse">
+    <div class="card">
+      <h2>Browse Stalls & Menu</h2>
+      <select id="stallSelect" onchange="onStallChange()">
+        <option value="">-- Select a stall --</option>
       </select>
+      <div id="menuList" style="margin-top:10px;"></div>
     </div>
-    <textarea id="feedbackComment" placeholder="Your comment..."></textarea>
-    <button onclick="submitFeedback()">Submit Feedback</button>
-    <div id="feedbackStatus"></div>
-
-    <h2 style="margin-top:20px;">Feedback for this stall</h2>
-    <div id="feedbackList" class="muted">Select a stall above to see feedback.</div>
   </div>
+
+  <!-- FEEDBACK TAB -->
+  <div class="panel" id="panel-feedback">
+    <div class="card">
+      <h2>Submit Feedback <span class="muted">(select a stall in Browse tab first)</span></h2>
+      <p class="muted" id="feedbackStallLabel">No stall selected.</p>
+      <select id="feedbackRating">
+        <option value="5">★★★★★ Excellent</option>
+        <option value="4">★★★★☆ Good</option>
+        <option value="3">★★★☆☆ Okay</option>
+        <option value="2">★★☆☆☆ Poor</option>
+        <option value="1">★☆☆☆☆ Terrible</option>
+      </select>
+      <textarea id="feedbackComment" placeholder="Your comment..."></textarea>
+      <button onclick="submitFeedback()">Submit Feedback</button>
+      <div id="feedbackStatus"></div>
+    </div>
+    <div class="card">
+      <h2>Feedback for this stall</h2>
+      <div id="feedbackList" class="muted">Select a stall in the Browse tab to see feedback.</div>
+    </div>
+  </div>
+
+  <!-- OTHER FEATURES TAB (placeholders for teammates) -->
+  <div class="panel" id="panel-other">
+    <div class="card">
+      <h2>Cart, Checkout & Payment <span class="badge">Yuzhen</span></h2>
+      <div class="placeholder">Waiting on Yuzhen's route files to wire this in.</div>
+    </div>
+    <div class="card">
+      <h2>Stall & Menu Management <span class="badge">Ziying</span></h2>
+      <div class="placeholder">Waiting on Ziying's route files to wire this in.</div>
+    </div>
+    <div class="card">
+      <h2>Promotions <span class="badge">Siyu</span></h2>
+      <div class="placeholder">Waiting on Siyu's route files to wire this in.</div>
+    </div>
+    <div class="card">
+      <h2>Inspections & Hygiene Grades <span class="badge">Weiye</span></h2>
+      <div class="placeholder">Waiting on Weiye's route files to wire this in.</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-const API = ""; // same origin (served by Express)
+const API = "http://localhost:3000";;
 let token = localStorage.getItem("token") || null;
 let customerId = localStorage.getItem("customer_id") || null;
 let customerName = localStorage.getItem("customer_name") || null;
 let selectedStallId = null;
+let selectedStallName = null;
+
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add("active");
+  document.getElementById(`panel-${name}`).classList.add("active");
+}
 
 function showStatus(elId, message, ok) {
   const el = document.getElementById(elId);
@@ -100,14 +151,11 @@ function showStatus(elId, message, ok) {
 }
 
 function updateSessionUI() {
+  document.getElementById("sessionCard").style.display = token ? "block" : "none";
+  document.getElementById("authCard").style.display = token ? "none" : "block";
   if (token) {
-    document.getElementById("sessionCard").classList.remove("hidden");
-    document.getElementById("authCard").classList.add("hidden");
     document.getElementById("sessionName").textContent = customerName;
     document.getElementById("sessionId").textContent = customerId;
-  } else {
-    document.getElementById("sessionCard").classList.add("hidden");
-    document.getElementById("authCard").classList.remove("hidden");
   }
 }
 
@@ -156,32 +204,42 @@ async function login() {
 }
 
 function logout() {
-  token = null;
-  customerId = null;
-  customerName = null;
+  token = null; customerId = null; customerName = null;
   localStorage.clear();
   updateSessionUI();
 }
 
 async function loadStalls() {
-  const res = await fetch(`${API}/catalog/stalls`);
-  const stalls = await res.json();
-  const select = document.getElementById("stallSelect");
-  select.innerHTML = '<option value="">-- Select a stall --</option>';
-  stalls.forEach((s) => {
-    const opt = document.createElement("option");
-    opt.value = s.stall_id;
-    opt.textContent = `${s.stall_name} (${s.cuisine_type || "N/A"})`;
-    select.appendChild(opt);
-  });
+  try {
+    const res = await fetch(`${API}/catalog/stalls`);
+    const stalls = await res.json();
+    const select = document.getElementById("stallSelect");
+    select.innerHTML = '<option value="">-- Select a stall --</option>';
+    stalls.forEach((s) => {
+      const opt = document.createElement("option");
+      opt.value = s.stall_id;
+      opt.dataset.name = s.stall_name;
+      opt.textContent = `${s.stall_name} (${s.cuisine_type || "N/A"})`;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    document.getElementById("menuList").innerHTML = `<p class="status err">Could not load stalls: ${err.message}</p>`;
+  }
 }
 
 async function onStallChange() {
-  const stallId = document.getElementById("stallSelect").value;
+  const select = document.getElementById("stallSelect");
+  const stallId = select.value;
   selectedStallId = stallId || null;
+  selectedStallName = stallId ? select.options[select.selectedIndex].dataset.name : null;
+
+  document.getElementById("feedbackStallLabel").textContent = selectedStallId
+    ? `Feedback for: ${selectedStallName}`
+    : "No stall selected.";
+
   if (!stallId) {
     document.getElementById("menuList").innerHTML = "";
-    document.getElementById("feedbackList").innerHTML = "Select a stall above to see feedback.";
+    document.getElementById("feedbackList").innerHTML = "Select a stall in the Browse tab to see feedback.";
     return;
   }
   await loadMenuItems(stallId);
@@ -193,17 +251,21 @@ async function loadMenuItems(stallId) {
   const items = await res.json();
   const container = document.getElementById("menuList");
   container.innerHTML = "";
+  if (items.length === 0) {
+    container.innerHTML = '<p class="muted">No menu items for this stall yet.</p>';
+    return;
+  }
   for (const item of items) {
     const likeRes = await fetch(`${API}/likes/item/${item.item_id}`);
     const likeData = await likeRes.json();
     const div = document.createElement("div");
-    div.className = "item";
+    div.className = "menu-item";
     div.innerHTML = `
       <span>${item.item_name} - $${item.price}</span>
       <span>
         <span class="muted">${likeData.count} like(s)</span>
-        <button style="width:auto;display:inline-block;margin-left:8px;" onclick="likeItem(${item.item_id})">Like</button>
-        <button style="width:auto;display:inline-block;" class="secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
+        <button class="small" onclick="likeItem(${item.item_id})">Like</button>
+        <button class="small secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
       </span>
     `;
     container.appendChild(div);
@@ -211,7 +273,7 @@ async function loadMenuItems(stallId) {
 }
 
 async function likeItem(itemId) {
-  if (!token) return alert("Please log in first.");
+  if (!token) return alert("Please log in first (Account tab).");
   const res = await fetch(`${API}/likes`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -223,7 +285,7 @@ async function likeItem(itemId) {
 }
 
 async function unlikeItem(itemId) {
-  if (!token) return alert("Please log in first.");
+  if (!token) return alert("Please log in first (Account tab).");
   const res = await fetch(`${API}/likes/${itemId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
@@ -234,8 +296,8 @@ async function unlikeItem(itemId) {
 }
 
 async function submitFeedback() {
-  if (!token) return showStatus("feedbackStatus", "Please log in first.", false);
-  if (!selectedStallId) return showStatus("feedbackStatus", "Please select a stall first.", false);
+  if (!token) return showStatus("feedbackStatus", "Please log in first (Account tab).", false);
+  if (!selectedStallId) return showStatus("feedbackStatus", "Please select a stall in the Browse tab first.", false);
 
   const rating = parseInt(document.getElementById("feedbackRating").value);
   const comment = document.getElementById("feedbackComment").value;
@@ -275,7 +337,6 @@ async function loadFeedback(stallId) {
   });
 }
 
-// Init
 updateSessionUI();
 loadStalls();
 </script>
