@@ -1,128 +1,141 @@
 // Lervyn Ang
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const sql = require('mssql');
+const sql = require("mssql");
+const Joi = require("joi");
+const dbConfig = require("../dbConfig");
+const verifyToken = require("../middleware/authMiddleware");
 
-// GET total likes for a menu item
-// URL: GET /likes/:itemId
-router.get('/:itemId', async (req, res) => {
-  try {
-    const { itemId } = req.params;
-    const pool = await sql.connect();
-    const result = await pool.request()
-      .input('itemId', sql.Int, itemId)
-      .query(`
-        SELECT 
-          m.item_name,
-          COUNT(l.like_id) AS total_likes
-        FROM menu_items m
-        LEFT JOIN likes l ON m.item_id = l.item_id
-        WHERE m.item_id = @itemId
-        GROUP BY m.item_name
-      `);
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ error: 'Menu item not found' });
-    }
-
-    res.json(result.recordset[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+const likeSchema = Joi.object({
+  item_id: Joi.number().integer().required(),
 });
 
-// POST like a menu item
-// URL: POST /likes
-router.post('/', async (req, res) => {
+// CREATE - like a menu item (SA-38, protected)
+router.post("/", verifyToken, async (req, res) => {
+  const { error, value } = likeSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
+
+  const { item_id } = value;
+  const customer_id = req.user.customer_id;
+
   try {
-    const { customer_id, item_id } = req.body;
+    const pool = await sql.connect(dbConfig);
 
-    // Validation
-    if (!customer_id || !item_id) {
-      return res.status(400).json({ error: 'customer_id and item_id are required' });
-    }
+    const itemCheck = await pool
+      .request()
+      .input("item_id", sql.Int, item_id)
+      .query("SELECT item_id FROM menu_items WHERE item_id = @item_id");
 
-    const pool = await sql.connect();
-
-    // Check if customer exists
-    const customerCheck = await pool.request()
-      .input('customer_id', sql.Int, customer_id)
-      .query('SELECT customer_id FROM customers WHERE customer_id = @customer_id');
-    if (customerCheck.recordset.length === 0) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
-
-    // Check if menu item exists
-    const itemCheck = await pool.request()
-      .input('item_id', sql.Int, item_id)
-      .query('SELECT item_id FROM menu_items WHERE item_id = @item_id');
     if (itemCheck.recordset.length === 0) {
-      return res.status(404).json({ error: 'Menu item not found' });
+      return res.status(404).json({ error: "Menu item not found" });
     }
 
-    // Check for duplicate like
-    const duplicateCheck = await pool.request()
-      .input('customer_id', sql.Int, customer_id)
-      .input('item_id', sql.Int, item_id)
-      .query(`
-        SELECT like_id FROM likes 
-        WHERE customer_id = @customer_id AND item_id = @item_id
-      `);
-    if (duplicateCheck.recordset.length > 0) {
-      return res.status(409).json({ error: 'You have already liked this item' });
+    const existing = await pool
+      .request()
+      .input("customer_id", sql.Int, customer_id)
+      .input("item_id", sql.Int, item_id)
+      .query("SELECT like_id FROM likes WHERE customer_id = @customer_id AND item_id = @item_id");
+
+    if (existing.recordset.length > 0) {
+      return res.status(409).json({ error: "You already liked this item" });
     }
 
-    // Insert like
-    await pool.request()
-      .input('customer_id', sql.Int, customer_id)
-      .input('item_id', sql.Int, item_id)
-      .query(`
-        INSERT INTO likes (customer_id, item_id)
-        VALUES (@customer_id, @item_id)
-      `);
+    const result = await pool
+      .request()
+      .input("customer_id", sql.Int, customer_id)
+      .input("item_id", sql.Int, item_id)
+      .query(
+        `INSERT INTO likes (customer_id, item_id, created_at)
+         OUTPUT INSERTED.*
+         VALUES (@customer_id, @item_id, GETDATE())`
+      );
 
-    res.status(201).json({ message: 'Menu item liked successfully' });
+    res.status(201).json({ message: "Item liked", like: result.recordset[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Server error liking item" });
   }
 });
 
-// DELETE unlike a menu item
-// URL: DELETE /likes
-router.delete('/', async (req, res) => {
+// READ - all likes for a menu item, with count (public)
+router.get("/item/:item_id", async (req, res) => {
+  const item_id = parseInt(req.params.item_id);
+  if (isNaN(item_id)) return res.status(400).json({ error: "Invalid item_id" });
+
   try {
-    const { customer_id, item_id } = req.body;
+    const pool = await sql.connect(dbConfig);
+    const result = await pool
+      .request()
+      .input("item_id", sql.Int, item_id)
+      .query(
+        `SELECT l.like_id, c.name AS customer_name, l.created_at
+         FROM likes l
+         JOIN customers c ON l.customer_id = c.customer_id
+         WHERE l.item_id = @item_id
+         ORDER BY l.created_at DESC`
+      );
 
-    if (!customer_id || !item_id) {
-      return res.status(400).json({ error: 'customer_id and item_id are required' });
-    }
-
-    const pool = await sql.connect();
-
-    // Check if like exists
-    const likeCheck = await pool.request()
-      .input('customer_id', sql.Int, customer_id)
-      .input('item_id', sql.Int, item_id)
-      .query(`
-        SELECT like_id FROM likes
-        WHERE customer_id = @customer_id AND item_id = @item_id
-      `);
-    if (likeCheck.recordset.length === 0) {
-      return res.status(404).json({ error: 'Like not found' });
-    }
-
-    // Delete like
-    await pool.request()
-      .input('customer_id', sql.Int, customer_id)
-      .input('item_id', sql.Int, item_id)
-      .query(`
-        DELETE FROM likes
-        WHERE customer_id = @customer_id AND item_id = @item_id
-      `);
-
-    res.status(200).json({ message: 'Menu item unliked successfully' });
+    res.json({ count: result.recordset.length, likes: result.recordset });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Server error fetching likes" });
+  }
+});
+
+// READ - all items liked by the logged-in customer (protected)
+router.get("/my-likes", verifyToken, async (req, res) => {
+  const customer_id = req.user.customer_id;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool
+      .request()
+      .input("customer_id", sql.Int, customer_id)
+      .query(
+        `SELECT l.like_id, mi.item_id, mi.item_name, mi.price, l.created_at
+         FROM likes l
+         JOIN menu_items mi ON l.item_id = mi.item_id
+         WHERE l.customer_id = @customer_id
+         ORDER BY l.created_at DESC`
+      );
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error fetching your likes" });
+  }
+});
+
+// DELETE - unlike an item (protected)
+router.delete("/:item_id", verifyToken, async (req, res) => {
+  const item_id = parseInt(req.params.item_id);
+  if (isNaN(item_id)) return res.status(400).json({ error: "Invalid item_id" });
+
+  const customer_id = req.user.customer_id;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const existing = await pool
+      .request()
+      .input("customer_id", sql.Int, customer_id)
+      .input("item_id", sql.Int, item_id)
+      .query("SELECT like_id FROM likes WHERE customer_id = @customer_id AND item_id = @item_id");
+
+    if (existing.recordset.length === 0) {
+      return res.status(404).json({ error: "Like not found" });
+    }
+
+    await pool
+      .request()
+      .input("customer_id", sql.Int, customer_id)
+      .input("item_id", sql.Int, item_id)
+      .query("DELETE FROM likes WHERE customer_id = @customer_id AND item_id = @item_id");
+
+    res.json({ message: "Item unliked" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error unliking item" });
   }
 });
 
