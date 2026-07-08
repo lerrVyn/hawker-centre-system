@@ -45,11 +45,11 @@ app.listen(PORT, async () => {
 });
 
 // Routes
-const feedbackRouter = require('./routes/feedback');  
-const likesRouter = require('./routes/likes'); 
-const inspectionRouter = require('./routes/inspection');
+const feedbackRouter = require("./routes/feedback");  
+const likesRouter = require("./routes/likes"); 
+const inspectionRouter = require("./routes/inspection");
 
-app.use('/feedback', feedbackRouter);  
-app.use('/likes', likesRouter);  
-app.use('/inspection', inspectionRouter);
+app.use("/feedback", feedbackRouter);  
+app.use("/likes", likesRouter);  
+app.use("/inspection", inspectionRouter);
 
