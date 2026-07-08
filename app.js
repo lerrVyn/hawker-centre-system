@@ -6,19 +6,8 @@ dotenv.config();
 const dbConfig = require("./dbConfig");
 const app = express();
 
-
-
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
-
-// Routes
-// const feedbackRouter = require('./routes/feedback');
-// app.use('/feedback', feedbackRouter);
-app.get("/", (req, res) => {
-  res.send("Hello, world!");
-});
-
-
 
 // Start server
 app.listen(PORT, async () => {
@@ -30,13 +19,15 @@ app.listen(PORT, async () => {
     console.error("Database connection error:", err);
     process.exit(1);
   }
+  console.log(`Server listening on port ${PORT}`);
+});
 
 // Routes
 const feedbackRouter = require('./routes/feedback');  
 const likesRouter = require('./routes/likes'); 
+const inspectionRouter = require('./routes/inspection');
 
 app.use('/feedback', feedbackRouter);  
 app.use('/likes', likesRouter);  
+app.use('/inspection', inspectionRouter);
 
-  console.log(`Server listening on port ${PORT}`);
-});
