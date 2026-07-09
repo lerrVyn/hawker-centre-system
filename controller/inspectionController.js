@@ -8,7 +8,6 @@ async function retrieveAllInspection(req,res) {
         if (inspectionsList.length === 0) {
             return res.status(200).json({message: "There are currently no inspection logs"});
         }
-
         return res.status(200).json(inspectionsList);
     }
     catch (error) {
@@ -25,7 +24,6 @@ async function retrieveInspectionByID(req,res) {
         if (!inspection) {
             return res.status(404).json({message: "Inspection log not found"});
         }
-
         return res.status(200).json(inspection);
     }
     catch (error) {
@@ -47,8 +45,26 @@ async function createInspection(req,res) {
     }
 }
 
+async function updateInspection(req,res) {
+    try {
+        const id = parseInt(req.params.id);
+        const inspectionJSON = req.body;
+        const updatedInspection = await inspectionModel.updateInspection(id, inspectionJSON);
+
+        if (!updatedInspection) {
+            return res.status(404).json({message: "Inspection log not found"});
+        }
+        return res.status(200).json(updatedInspection);
+    }
+    catch (error) {
+        console.error(`Controller error: ${error}`);
+        return res.status(500).json({error: `Error updating inspection log`});
+    }
+}
+
 module.exports = {
     retrieveAllInspection,
     retrieveInspectionByID,
-    createInspection    
+    createInspection,
+    updateInspection
 }
