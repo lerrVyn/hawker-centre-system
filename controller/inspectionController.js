@@ -17,6 +17,24 @@ async function retrieveAllInspection(req,res) {
     }
 }
 
+async function retrieveInspectionByID(req,res) {
+    try {
+        const id = parseInt(req.params.id);
+        const inspection = await inspectionModel.retrieveInspectionByID(id);
+
+        if (!inspection) {
+            return res.json({message: "Inspection log not found"});
+        }
+
+        res.json(inspection);
+    }
+    catch (error) {
+        console.error(`Controller error: ${error}`);
+        res.status(500).json({error: `Error retrieving inspection log`});
+    }
+}
+
 module.exports = {
-    retrieveAllInspection
+    retrieveAllInspection,
+    retrieveInspectionByID
 }
