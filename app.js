@@ -21,14 +21,14 @@ const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
 const inspectionRouter = require("./routes/inspection");
-const inspectionRouter = require("./routes/inspection");
+
 
 app.use("/auth", authRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/likes", likesRouter);
 app.use("/catalog", catalogRouter);
 app.use("/inspection", inspectionRouter);
-app.use("/inspection", inspectionRouter);
+
 
 app.get("/api", (req, res) => {
   res.send("Hawker Centre API is running.");
