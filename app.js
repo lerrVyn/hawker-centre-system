@@ -16,16 +16,17 @@ app.use(express.static(path.join(__dirname, "frontend"))); // serves frontend/in
 const PORT = process.env.PORT || 3000;
 
 // Routes
-// Routes
 const authRouter = require("./routes/auth");
 const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
+const inspectionRouter = require("./routes/inspection");
 
 app.use("/auth", authRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/likes", likesRouter);
 app.use("/catalog", catalogRouter);
+app.use("/inspection", inspectionRouter);
 
 app.get("/api", (req, res) => {
   res.send("Hawker Centre API is running.");
@@ -43,13 +44,3 @@ app.listen(PORT, async () => {
   }
   console.log(`Server listening on port ${PORT}`);
 });
-
-// Routes
-const feedbackRouter = require("./routes/feedback");  
-const likesRouter = require("./routes/likes"); 
-const inspectionRouter = require("./routes/inspection");
-
-app.use("/feedback", feedbackRouter);  
-app.use("/likes", likesRouter);  
-app.use("/inspection", inspectionRouter);
-

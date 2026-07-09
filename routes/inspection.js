@@ -7,11 +7,6 @@ const inspectionController = require("../controller/inspectionController");
 
 // Routes
 router.get("/", inspectionController.retrieveAllInspection);
-
-// Retrieves specific inspection
-router.get("/:id", async (req,res) => {
-    const id = parseInt(req.params.id);
-
-});
+router.get("/:id", validateID, inspectionController.retrieveInspectionByID);
 
 module.exports = router
