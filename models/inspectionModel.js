@@ -74,9 +74,31 @@ async function updateInspection(id,inspectionInfo) {
         const result = await request.query(query);
 
         if (result.rowsAffected[0] === 0) {
-            return 
+            return null
         }
         return retrieveInspectionByID(id);
+    }
+    catch (error) {
+        console.log(`Database error: ${error}`)
+        throw error;
+    }
+}
+
+async function deleteInspection(id) {
+    try {
+        const connection = await poolPromise;
+        const query = `delete from inspections where inspection_id = @id`
+
+        const deletedInspection = await retrieveInspectionByID(id);
+
+        const request = await connection.request();
+        request.input("id", id);
+        const result = await request.query(query);
+
+        if (result.rowsAffected[0] === 0) {
+            return null
+        }
+        return deletedInspection;
     }
     catch (error) {
         console.log(`Database error: ${error}`)
@@ -88,5 +110,6 @@ module.exports = {
     retrieveAllInspection,
     retrieveInspectionByID,
     createInspection,
-    updateInspection
+    updateInspection,
+    deleteInspection
 }

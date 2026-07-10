@@ -11,6 +11,6 @@ router.get("/", inspectionController.retrieveAllInspection);
 router.get("/:id", validateID, inspectionController.retrieveInspectionByID);
 router.post("/", validateInspection, inspectionController.createInspection);
 router.put("/:id", validateID, validateInspection, inspectionController.updateInspection);
-// router.delete("/:id", validateID, inspectionController.deleteInspection);
+router.delete("/:id", validateID, inspectionController.deleteInspection);
 
 module.exports = router

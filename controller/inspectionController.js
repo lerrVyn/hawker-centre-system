@@ -62,9 +62,26 @@ async function updateInspection(req,res) {
     }
 }
 
+async function deleteInspection(req,res) {
+    try {
+        const id = parseInt(req.params.id);
+        const deletedInspection = await inspectionModel.deleteInspection(id);
+
+        if (!deletedInspection) {
+            return res.status(404).json({message: "Inspection log not found"});
+        }
+        return res.status(200).json(deletedInspection);
+    }
+    catch (error) {
+        console.error(`Controller error: ${error}`);
+        return res.status(500).json({error: `Error deleting inspection log`});
+    }
+}
+
 module.exports = {
     retrieveAllInspection,
     retrieveInspectionByID,
     createInspection,
-    updateInspection
+    updateInspection,
+    deleteInspection
 }
