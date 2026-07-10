@@ -109,10 +109,70 @@
 
   <!-- OTHER FEATURES TAB (placeholders for teammates) -->
   <div class="panel" id="panel-other">
+    <div class="panel" id="panel-orders">
+    <!-- Shopping Cart -->
     <div class="card">
-      <h2>Cart, Checkout & Payment <span class="badge">Yuzhen</span></h2>
-      <div class="placeholder">Waiting on Yuzhen's route files to wire this in.</div>
+    <h2>Shopping Cart</h2>
+    <button onclick="loadCart()">View Cart</button>
+    <div id="cartList" class="muted">Your cart is empty.</div>
+  </div>
+
+  <!-- Checkout -->
+  <div class="card">
+    <h2>Checkout</h2>
+    <input
+      id="checkoutStall"
+      type="number"
+      placeholder="Enter Stall ID">
+    <button onclick="checkout()">Checkout</button>
+    <div id="checkoutStatus"></div>
+  </div>
+
+  <!-- Payment -->
+  <div class="card">
+    <h2>Payment</h2>
+    <input
+      id="paymentOrderId"
+      type="number"
+      placeholder="Order ID">
+
+    <select id="paymentMethod">
+      <option value="Cash">Cash</option>
+      <option value="PayNow">PayNow</option>
+      <option value="Credit Card">Credit Card</option>
+    </select>
+
+    <button onclick="makePayment()">Pay Now</button>
+
+    <div id="paymentStatus"></div>
+  </div>
+
+  <!-- Order History -->
+  <div class="card">
+    <h2>Order History</h2>
+    <button onclick="loadHistory()">Load History</button>
+    <div id="historyList" class="muted">
+      No orders found.
     </div>
+  </div>
+
+  <!-- Order Status -->
+  <div class="card">
+    <h2>Order Status</h2>
+
+    <input
+      id="statusOrderId"
+      type="number"
+      placeholder="Order ID">
+
+    <button onclick="checkStatus()">
+      Check Status
+    </button>
+
+    <div id="statusResult"></div>
+  </div>
+
+</div>
     <div class="card">
       <h2>Stall & Menu Management <span class="badge">Ziying</span></h2>
       <div class="placeholder">Waiting on Ziying's route files to wire this in.</div>
