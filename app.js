@@ -21,7 +21,7 @@ const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
 const inspectionRouter = require("./routes/inspection");
-const customerAuthRouter = require("./routes/authcust");
+const customerAuthRouter = require("./routes/authCust");
 
 
 app.use("/auth", authRouter);
