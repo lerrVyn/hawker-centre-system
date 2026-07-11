@@ -20,6 +20,7 @@ const authRouter = require("./routes/auth");
 const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
+const gradeRouter = require("./routes/grade");
 const inspectionRouter = require("./routes/inspection");
 const customerAuthRouter = require("./routes/authCust");
 
@@ -28,6 +29,7 @@ app.use("/auth", authRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/likes", likesRouter);
 app.use("/catalog", catalogRouter);
+app.use("/grade", gradeRouter);
 app.use("/inspection", inspectionRouter);
 app.use("/auth/customer", customerAuthRouter);
 

@@ -13,4 +13,4 @@ router.post("/", validateInspection, inspectionController.createInspection);
 router.put("/:id", validateID, validateInspection, inspectionController.updateInspection);
 router.delete("/:id", validateID, inspectionController.deleteInspection);
 
-module.exports = router
+module.exports = router;
