@@ -1,5 +1,6 @@
 // Wei Ye
 const { sql, poolPromise } = require("../dbConnection");
+const { getGrade } = require("./utility");
 
 async function retrieveAllInspection() {
     try {
@@ -37,7 +38,11 @@ async function createInspection(inspectionInfo) {
     try {
         const connection = await poolPromise;
         let remarks = inspectionInfo.remarks;
-        const query = `insert into inspections (stall_id, officer_id, score, remarks) values (@stall_id, @officer_id, @score, @remarks); select scope_identity() as id;`;
+        const query = `
+            insert into inspections (stall_id, officer_id, score, remarks) values (@stall_id, @officer_id, @score, @remarks); 
+            select scope_identity() as id;
+            update stalls set hygiene_grade = @grade where stall_id = @stall_id;
+        `;
 
         if (!inspectionInfo.remarks) { remarks = "None"}
 
@@ -46,6 +51,7 @@ async function createInspection(inspectionInfo) {
         request.input("officer_id", inspectionInfo.officer_id);
         request.input("score", inspectionInfo.score);
         request.input("remarks", remarks);
+        request.input("grade", getGrade(inspectionInfo.score));
         const result = await request.query(query);
         const newInspectionID = result.recordset[0].id;
 
