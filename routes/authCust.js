@@ -10,4 +10,7 @@ router.get("/test", authCustController.test);
 // Register
 router.post("/register", authCustController.register);
 
+// Login
+router.post("/login", authCustController.login);
+
 module.exports = router;
