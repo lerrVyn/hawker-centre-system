@@ -1,58 +1,38 @@
 // Ge Siyu
-const express = require("express");
-const sql = require("mssql");
 
+const express = require("express");
 const router = express.Router();
 
-router.post("/promotions", async (req, res) => {
+const promotionController = require("../controller/promotionController");
 
-    try {
+// Get all promotions
+router.get(
+    "/promotions",
+    promotionController.getAllPromotions
+);
 
-        const {
-            stall_id,
-            promo_name,
-            discount_percent,
-            start_date,
-            end_date,
-            description
-        } = req.body;
+// Get one promotion
+router.get(
+    "/promotions/:id",
+    promotionController.getPromotionById
+);
 
-        await sql.query`
-            INSERT INTO promotions
-            (
-                stall_id,
-                promo_name,
-                discount_percent,
-                start_date,
-                end_date,
-                description
-            )
+// Create promotion
+router.post(
+    "/promotions",
+    promotionController.createPromotion
+);
 
-            VALUES
-            (
-                ${stall_id},
-                ${promo_name},
-                ${discount_percent},
-                ${start_date},
-                ${end_date},
-                ${description}
-            )
-        `;
+// Update promotion
+router.put(
+    "/promotions/:id",
+    promotionController.updatePromotion
+);
 
-        res.status(201).json({
-            message: "Promotion created successfully"
-        });
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-
-    }
-
-});
+// Delete promotion
+router.delete(
+    "/promotions/:id",
+    promotionController.deletePromotion
+);
 
 module.exports = router;
