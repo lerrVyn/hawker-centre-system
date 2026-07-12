@@ -224,13 +224,17 @@ async function register() {
   const email = document.getElementById("authEmail").value;
   const password = document.getElementById("authPassword").value;
   try {
-    const res = await fetch(`${API}/auth/register`, {
+    const res = await fetch(`${API}/auth/customer/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
     });
     const data = await res.json();
-    showStatus("authStatus", res.ok ? "Registered! Now log in." : data.error, res.ok);
+    showStatus(
+  "authStatus",
+  res.ok ? "Registered! Now log in." : data.message,
+  res.ok
+);
   } catch (err) {
     showStatus("authStatus", "Network error: " + err.message, false);
   }
@@ -240,7 +244,7 @@ async function login() {
   const email = document.getElementById("authEmail").value;
   const password = document.getElementById("authPassword").value;
   try {
-    const res = await fetch(`${API}/auth/login`, {
+    const res = await fetch(`${API}/auth/customer/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -248,15 +252,15 @@ async function login() {
     const data = await res.json();
     if (res.ok) {
       token = data.token;
-      customerId = data.customer_id;
-      customerName = data.name;
+      customerId = data.data.customer_id;
+      customerName = data.data.name;
       localStorage.setItem("token", token);
       localStorage.setItem("customer_id", customerId);
       localStorage.setItem("customer_name", customerName);
       showStatus("authStatus", "Login successful!", true);
       updateSessionUI();
     } else {
-      showStatus("authStatus", data.error, false);
+      showStatus("authStatus", data.message, false);
     }
   } catch (err) {
     showStatus("authStatus", "Network error: " + err.message, false);
@@ -271,8 +275,9 @@ function logout() {
 
 async function loadStalls() {
   try {
-    const res = await fetch(`${API}/catalog/stalls`);
-    const stalls = await res.json();
+    const res = await fetch(`${API}/catalog/customer/stalls`);
+    const result = await res.json();
+    const stalls=result.data;
     const select = document.getElementById("stallSelect");
     select.innerHTML = '<option value="">-- Select a stall --</option>';
     stalls.forEach((s) => {
@@ -307,8 +312,9 @@ async function onStallChange() {
 }
 
 async function loadMenuItems(stallId) {
-  const res = await fetch(`${API}/catalog/menu-items/${stallId}`);
-  const items = await res.json();
+  const res = await fetch(`${API}/catalog/customer/stalls/${stallId}/menu`);
+  const result = await res.json();
+  const items = result.data;
   const container = document.getElementById("menuList");
   container.innerHTML = "";
   if (items.length === 0) {
