@@ -34,6 +34,19 @@
   .stars { color: #b45309; font-size: 14px; }
   .badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
   .placeholder { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; border: 2px dashed #e5e7eb; border-radius: 8px; }
+
+  .flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .flow-step { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fafafa; }
+  .flow-step h3 { font-size: 14px; margin: 0 0 8px; }
+  .flow-step .endpoint { font-family: Consolas, monospace; font-size: 12px; color: #92400e; margin-bottom: 8px; }
+  .flow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+  .summary-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; }
+  .api-log { background: #111827; color: #f9fafb; border-radius: 8px; padding: 12px; font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; min-height: 90px; overflow-x: auto; }
+  @media (max-width: 760px) {
+    .flow-steps, .summary-grid { grid-template-columns: 1fr; }
+  }
+
 </style>
 </head>
 <body>
@@ -107,72 +120,69 @@
     </div>
   </div>
 
-  <!-- OTHER FEATURES TAB (placeholders for teammates) -->
+  <!-- OTHER FEATURES TAB -->
   <div class="panel" id="panel-other">
-    <div class="panel" id="panel-orders">
-    <!-- Shopping Cart -->
+
     <div class="card">
-    <h2>Shopping Cart</h2>
-    <button onclick="loadCart()">View Cart</button>
-    <div id="cartList" class="muted">Your cart is empty.</div>
-  </div>
+      <h2>Order Management Journey <span class="badge">Yuzhen</span></h2>
+      <p class="muted">
+        One end-to-end flow for Cart → Checkout → Payment → Complete Order.
+        Each step calls the corresponding backend API and shows the returned result.
+      </p>
 
-  <!-- Checkout -->
-  <div class="card">
-    <h2>Checkout</h2>
-    <input
-      id="checkoutStall"
-      type="number"
-      placeholder="Enter Stall ID">
-    <button onclick="checkout()">Checkout</button>
-    <div id="checkoutStatus"></div>
-  </div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <h3>1. Cart</h3>
+          <div class="endpoint">GET /cart/:customerId<br>POST /cart</div>
+          <button class="small" onclick="loadCart()">View Cart</button>
+          <div id="cartList" class="muted" style="margin-top:8px;">Your cart is empty.</div>
+        </div>
 
-  <!-- Payment -->
-  <div class="card">
-    <h2>Payment</h2>
-    <input
-      id="paymentOrderId"
-      type="number"
-      placeholder="Order ID">
+        <div class="flow-step">
+          <h3>2. Checkout</h3>
+          <div class="endpoint">POST /orders/checkout</div>
+          <input id="checkoutStall" type="number" placeholder="Stall ID" />
+          <button class="small" onclick="checkout()">Create Order</button>
+          <div id="checkoutStatus"></div>
+        </div>
 
-    <select id="paymentMethod">
-      <option value="Cash">Cash</option>
-      <option value="PayNow">PayNow</option>
-      <option value="Credit Card">Credit Card</option>
-    </select>
+        <div class="flow-step">
+          <h3>3. Payment</h3>
+          <div class="endpoint">POST /payment</div>
+          <input id="paymentOrderId" type="number" placeholder="Order ID" />
+          <select id="paymentMethod">
+            <option value="Cash">Cash</option>
+            <option value="NETS">NETS</option>
+            <option value="PayNow">PayNow</option>
+          </select>
+          <button class="small" onclick="makePayment()">Pay Now</button>
+          <div id="paymentStatus"></div>
+        </div>
+      </div>
 
-    <button onclick="makePayment()">Pay Now</button>
+      <div class="flow-actions">
+        <button onclick="runOrderFlow()">Run Full Flow</button>
+        <button class="secondary" onclick="loadHistory()">Load Order History</button>
+        <button class="secondary" onclick="checkStatus()">Refresh Order Status</button>
+      </div>
 
-    <div id="paymentStatus"></div>
-  </div>
+      <input id="statusOrderId" type="number" placeholder="Order ID for status/history checks" style="margin-top:10px;" />
 
-  <!-- Order History -->
-  <div class="card">
-    <h2>Order History</h2>
-    <button onclick="loadHistory()">Load History</button>
-    <div id="historyList" class="muted">
-      No orders found.
+      <div class="summary-grid">
+        <div class="summary-box">
+          <h3 style="margin-top:0;">Order Status</h3>
+          <div id="statusResult" class="muted">No order checked.</div>
+        </div>
+        <div class="summary-box">
+          <h3 style="margin-top:0;">Order History</h3>
+          <div id="historyList" class="muted">No orders loaded.</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:14px; margin:16px 0 8px;">Backend API Activity</h3>
+      <div id="apiLog" class="api-log">Waiting for an action...</div>
     </div>
-  </div>
 
-  <!-- Order Status -->
-  <div class="card">
-    <h2>Order Status</h2>
-
-    <input
-      id="statusOrderId"
-      type="number"
-      placeholder="Order ID">
-
-    <button onclick="checkStatus()">
-      Check Status
-    </button>
-
-    <div id="statusResult"></div>
-  </div>
-
-</div>
     <div class="card">
       <h2>Stall & Menu Management <span class="badge">Ziying</span></h2>
       <div class="placeholder">Waiting on Ziying's route files to wire this in.</div>
@@ -190,7 +200,7 @@
 </div>
 
 <script>
-const API = "http://localhost:3000";;
+const API = "";
 let token = localStorage.getItem("token") || null;
 let customerId = localStorage.getItem("customer_id") || null;
 let customerName = localStorage.getItem("customer_name") || null;
@@ -330,6 +340,7 @@ async function loadMenuItems(stallId) {
       <span>${item.item_name} - $${Number(item.price).toFixed(2)}</span>
       <span>
         <span class="muted">${likeData.count} like(s)</span>
+        <button class="small" onclick="addToCart(${item.item_id})">Add to Cart</button>
         <button class="small" onclick="likeItem(${item.item_id})">Like</button>
         <button class="small secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
       </span>
@@ -401,6 +412,331 @@ async function loadFeedback(stallId) {
     `;
     container.appendChild(div);
   });
+}
+
+
+
+function logApi(method, endpoint, payload, response, ok) {
+  const log = document.getElementById("apiLog");
+  if (!log) return;
+
+  const time = new Date().toLocaleTimeString();
+  const requestText = payload ? `\nRequest: ${JSON.stringify(payload, null, 2)}` : "";
+  const responseText = `\nResponse: ${JSON.stringify(response, null, 2)}`;
+
+  log.textContent =
+    `[${time}] ${method} ${endpoint}` +
+    requestText +
+    responseText +
+    `\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
+}
+
+async function runOrderFlow() {
+  if (!requireCustomer()) return;
+
+  const stallId = Number(
+    document.getElementById("checkoutStall").value || selectedStallId
+  );
+
+  if (!stallId) {
+    showStatus("checkoutStatus", "Select a stall or enter a Stall ID first.", false);
+    return;
+  }
+
+  await loadCart();
+
+  const checkoutWorked = await checkout();
+  if (!checkoutWorked) return;
+
+  const method = document.getElementById("paymentMethod").value;
+  if (!method) {
+    showStatus("paymentStatus", "Select a payment method.", false);
+    return;
+  }
+
+  const paymentWorked = await makePayment();
+  if (!paymentWorked) return;
+
+  await checkStatus();
+  await loadHistory();
+}
+
+function requireCustomer() {
+  if (!customerId) {
+    alert("Please log in first using the Account tab.");
+    switchTab("account");
+    return false;
+  }
+  return true;
+}
+
+async function addToCart(itemId) {
+  if (!requireCustomer()) return;
+
+  try {
+    const res = await fetch(`${API}/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerId: Number(customerId),
+        itemId: Number(itemId),
+        quantity: 1
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || data.details || "Unable to add item to cart.");
+    }
+
+    logApi("POST", "/cart", {
+      customerId: Number(customerId),
+      itemId: Number(itemId),
+      quantity: 1
+    }, data, true);
+
+    alert(data.message || "Item added to cart.");
+  } catch (err) {
+    logApi("POST", "/cart", null, { error: err.message }, false);
+    alert(err.message);
+  }
+}
+
+async function loadCart() {
+  if (!requireCustomer()) return;
+
+  const container = document.getElementById("cartList");
+  container.innerHTML = '<p class="muted">Loading cart...</p>';
+
+  try {
+    const res = await fetch(`${API}/cart/${customerId}`);
+    const items = await res.json();
+
+    if (!res.ok) {
+      throw new Error(items.error || items.details || "Unable to load cart.");
+    }
+
+    logApi("GET", `/cart/${customerId}`, null, items, true);
+
+    if (!Array.isArray(items) || items.length === 0) {
+      container.innerHTML = '<p class="muted">Your cart is empty.</p>';
+      return;
+    }
+
+    const total = items.reduce(
+      (sum, item) => sum + Number(item.subtotal || 0),
+      0
+    );
+
+    container.innerHTML = items.map(item => `
+      <div class="menu-item">
+        <span>
+          <b>${item.item_name}</b><br>
+          <span class="muted">
+            $${Number(item.price).toFixed(2)} × ${item.quantity}
+          </span>
+        </span>
+        <span><b>$${Number(item.subtotal).toFixed(2)}</b></span>
+      </div>
+    `).join("") + `
+      <p style="text-align:right; margin-top:12px;">
+        <b>Total: $${total.toFixed(2)}</b>
+      </p>
+    `;
+  } catch (err) {
+    logApi("GET", `/cart/${customerId}`, null, { error: err.message }, false);
+    container.innerHTML = `<div class="status err">${err.message}</div>`;
+  }
+}
+
+async function checkout() {
+  if (!requireCustomer()) return;
+
+  const enteredStallId = Number(
+    document.getElementById("checkoutStall").value
+  );
+
+  const stallId = enteredStallId || Number(selectedStallId);
+  const statusBox = document.getElementById("checkoutStatus");
+
+  if (!stallId) {
+    showStatus(
+      "checkoutStatus",
+      "Select a stall in Browse or enter a Stall ID.",
+      false
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/orders/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerId: Number(customerId),
+        stallId
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || data.details || "Checkout failed.");
+    }
+
+    localStorage.setItem("latestOrderId", data.orderId);
+    document.getElementById("paymentOrderId").value = data.orderId;
+    document.getElementById("statusOrderId").value = data.orderId;
+
+    statusBox.className = "status ok";
+    statusBox.innerHTML = `
+      Order created successfully.<br>
+      Order ID: <b>${data.orderId}</b><br>
+      Total: <b>$${Number(data.totalPrice).toFixed(2)}</b>
+    `;
+
+    logApi("POST", "/orders/checkout", {
+      customerId: Number(customerId),
+      stallId
+    }, data, true);
+
+    await loadCart();
+    return true;
+  } catch (err) {
+    logApi("POST", "/orders/checkout", {
+      customerId: Number(customerId),
+      stallId
+    }, { error: err.message }, false);
+    showStatus("checkoutStatus", err.message, false);
+    return false;
+  }
+}
+
+async function makePayment() {
+  const orderId = Number(
+    document.getElementById("paymentOrderId").value ||
+    localStorage.getItem("latestOrderId")
+  );
+
+  const paymentMethod =
+    document.getElementById("paymentMethod").value;
+
+  if (!orderId) {
+    showStatus("paymentStatus", "Enter an Order ID or checkout first.", false);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, paymentMethod })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || data.details || "Payment failed.");
+    }
+
+    localStorage.setItem("latestOrderId", orderId);
+    document.getElementById("statusOrderId").value = orderId;
+
+    showStatus(
+      "paymentStatus",
+      `Payment successful. Payment ID: ${data.paymentId}. Method: ${paymentMethod}.`,
+      true
+    );
+
+    logApi("POST", "/payment", {
+      orderId,
+      paymentMethod
+    }, data, true);
+
+    await checkStatus();
+    return true;
+  } catch (err) {
+    logApi("POST", "/payment", {
+      orderId,
+      paymentMethod
+    }, { error: err.message }, false);
+    showStatus("paymentStatus", err.message, false);
+    return false;
+  }
+}
+
+async function loadHistory() {
+  if (!requireCustomer()) return;
+
+  const container = document.getElementById("historyList");
+  container.innerHTML = '<p class="muted">Loading order history...</p>';
+
+  try {
+    const res = await fetch(`${API}/orders/history/${customerId}`);
+    const orders = await res.json();
+
+    if (!res.ok) {
+      throw new Error(orders.error || orders.details || "Unable to load order history.");
+    }
+
+    logApi("GET", `/orders/history/${customerId}`, null, orders, true);
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      container.innerHTML = '<p class="muted">No orders found.</p>';
+      return;
+    }
+
+    container.innerHTML = orders.map(order => `
+      <div class="feedback-entry">
+        <b>Order #${order.order_id}</b>
+        <p style="margin:4px 0;">
+          Total: $${Number(order.total_price || 0).toFixed(2)}
+        </p>
+        <span class="badge">${order.status}</span>
+        <span class="muted">
+          ${order.created_at ? new Date(order.created_at).toLocaleString() : ""}
+        </span>
+      </div>
+    `).join("");
+  } catch (err) {
+    logApi("GET", `/orders/history/${customerId}`, null, { error: err.message }, false);
+    container.innerHTML = `<div class="status err">${err.message}</div>`;
+  }
+}
+
+async function checkStatus() {
+  const orderId = Number(
+    document.getElementById("statusOrderId").value ||
+    localStorage.getItem("latestOrderId")
+  );
+
+  if (!orderId) {
+    showStatus("statusResult", "Enter an Order ID.", false);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/orders/${orderId}/status`);
+    const order = await res.json();
+
+    if (!res.ok) {
+      throw new Error(order.error || order.details || "Unable to check order status.");
+    }
+
+    const result = Array.isArray(order) ? order[0] : order;
+
+    logApi("GET", `/orders/${orderId}/status`, null, result, true);
+
+    document.getElementById("statusResult").className = "status ok";
+    document.getElementById("statusResult").innerHTML = `
+      Order ID: <b>${result.order_id ?? orderId}</b><br>
+      Status: <b>${result.status}</b>
+    `;
+  } catch (err) {
+    logApi("GET", `/orders/${orderId}/status`, null, { error: err.message }, false);
+    showStatus("statusResult", err.message, false);
+  }
 }
 
 updateSessionUI();
