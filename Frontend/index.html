@@ -213,10 +213,30 @@
       <h2>Stall & Menu Management <span class="badge">Ziying</span></h2>
       <div class="placeholder">Waiting on Ziying's route files to wire this in.</div>
     </div>
-    <div class="card">
-      <h2>Promotions <span class="badge">Siyu</span></h2>
-      <div class="placeholder">Waiting on Siyu's route files to wire this in.</div>
-    </div>
+<div class="card">
+
+<h2>🏪 Stall Owner Management</h2>
+
+<div class="row">
+<button onclick="loadProfile()">Load Profile</button>
+<button onclick="loadMenu()">Menu</button>
+<button onclick="loadPromotions()">Promotions</button>
+<button onclick="loadIncomingOrders()">Incoming Orders</button>
+</div>
+
+<hr>
+
+<div id="ownerContent">
+
+<p class="muted">
+
+Select one of the options above.
+
+</p>
+
+</div>
+
+</div>
   </div>
 
 </div>
@@ -243,6 +263,89 @@ function showStatus(elId, message, ok) {
   el.textContent = message;
 }
 
+async function loadProfile(){
+
+document.getElementById("ownerContent").innerHTML=`
+
+<h3>Manage Stall Profile</h3>
+
+<p>This page will load your stall profile.</p>
+
+<button onclick="alert('Profile loaded')">
+
+Load Profile
+
+</button>
+
+`;
+
+}
+
+async function loadMenu(){
+
+document.getElementById("ownerContent").innerHTML=`
+
+<h3>Menu Management</h3>
+
+<button onclick="alert('Add Menu')">
+
+Add Menu Item
+
+</button>
+
+<div class="placeholder">
+
+Menu items will appear here.
+
+</div>
+
+`;
+
+}
+
+async function loadPromotions(){
+
+document.getElementById("ownerContent").innerHTML=`
+
+<h3>Promotions</h3>
+
+<button onclick="alert('Create Promotion')">
+
+Create Promotion
+
+</button>
+
+<div class="placeholder">
+
+Promotions will appear here.
+
+</div>
+
+`;
+
+}
+
+async function loadIncomingOrders(){
+
+document.getElementById("ownerContent").innerHTML=`
+
+<h3>Incoming Orders</h3>
+
+<button onclick="alert('Refresh Orders')">
+
+Refresh
+
+</button>
+
+<div class="placeholder">
+
+Incoming orders will appear here.
+
+</div>
+
+`;
+
+}
 function updateSessionUI() {
   document.getElementById("sessionCard").style.display = token ? "block" : "none";
   document.getElementById("authCard").style.display = token ? "none" : "block";
