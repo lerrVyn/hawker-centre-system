@@ -391,20 +391,38 @@ function logout() {
 
 async function loadStalls() {
   try {
-    const res = await fetch(`${API}/catalog/customer/stalls`);
-    const result = await res.json();
-    const stalls = result.data;
+    const res = await fetch(`${API}/catalog/stalls`);
+    const stalls = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        stalls.error || "Unable to load stalls."
+      );
+    }
+
     const select = document.getElementById("stallSelect");
-    select.innerHTML = '<option value="">-- Select a stall --</option>';
-    stalls.forEach((s) => {
-      const opt = document.createElement("option");
-      opt.value = s.stall_id;
-      opt.dataset.name = s.stall_name;
-      opt.textContent = `${s.stall_name} (${s.cuisine_type || "N/A"})`;
-      select.appendChild(opt);
+
+    select.innerHTML =
+      '<option value="">-- Select a stall --</option>';
+
+    stalls.forEach((stall) => {
+      const option = document.createElement("option");
+
+      option.value = stall.stall_id;
+      option.dataset.name = stall.stall_name;
+      option.textContent =
+        `${stall.stall_name} (${stall.cuisine_type || "N/A"})`;
+
+      select.appendChild(option);
     });
   } catch (err) {
-    document.getElementById("menuList").innerHTML = `<p class="status err">Could not load stalls: ${err.message}</p>`;
+    console.error("LOAD STALLS ERROR:", err);
+
+    document.getElementById("menuList").innerHTML = `
+      <p class="status err">
+        Could not load stalls: ${err.message}
+      </p>
+    `;
   }
 }
 
@@ -432,37 +450,85 @@ async function onStallChange() {
 
 async function loadMenuItems(stallId) {
   try {
-    const res = await fetch(`${API}/catalog/customer/stalls/${stallId}/menu`);
-    const result = await res.json();
-    const items = result.data;
+    const res = await fetch(
+      `${API}/catalog/menu-items/${stallId}`
+    );
+
+    const items = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        items.error || "Unable to load menu items."
+      );
+    }
+
     const container = document.getElementById("menuList");
     container.innerHTML = "";
-    if (!items || items.length === 0) {
-      container.innerHTML = '<p class="muted">No menu items for this stall yet.</p>';
+
+    if (!Array.isArray(items) || items.length === 0) {
+      container.innerHTML =
+        '<p class="muted">No menu items for this stall yet.</p>';
       return;
     }
+
     for (const item of items) {
       let likeCount = 0;
+
       try {
-        const likeRes = await fetch(`${API}/likes/item/${item.item_id}`);
+        const likeRes = await fetch(
+          `${API}/likes/item/${item.item_id}`
+        );
+
         const likeData = await likeRes.json();
         likeCount = likeData.count || 0;
-      } catch (_) {}
+      } catch (err) {
+        console.error("Unable to load like count:", err);
+      }
+
       const div = document.createElement("div");
       div.className = "menu-item";
+
       div.innerHTML = `
-        <span>${item.item_name} - $${Number(item.price).toFixed(2)}</span>
         <span>
-          <span class="muted">${likeCount} like(s)</span>
-          <button class="small" onclick="addToCart(${item.item_id})">Add to Cart</button>
-          <button class="small" onclick="likeItem(${item.item_id})">Like</button>
-          <button class="small secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
+          ${item.item_name}
+          - $${Number(item.price).toFixed(2)}
+        </span>
+
+        <span>
+          <span class="muted">
+            ${likeCount} like(s)
+          </span>
+
+          <button
+            class="small"
+            onclick="addToCart(${item.item_id})">
+            Add to Cart
+          </button>
+
+          <button
+            class="small"
+            onclick="likeItem(${item.item_id})">
+            Like
+          </button>
+
+          <button
+            class="small secondary"
+            onclick="unlikeItem(${item.item_id})">
+            Unlike
+          </button>
         </span>
       `;
+
       container.appendChild(div);
     }
   } catch (err) {
-    document.getElementById("menuList").innerHTML = `<p class="status err">Could not load menu: ${err.message}</p>`;
+    console.error("LOAD MENU ERROR:", err);
+
+    document.getElementById("menuList").innerHTML = `
+      <p class="status err">
+        Could not load menu: ${err.message}
+      </p>
+    `;
   }
 }
 
