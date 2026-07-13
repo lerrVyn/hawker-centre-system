@@ -24,6 +24,7 @@ const gradeRouter = require("./routes/grade");
 const inspectionRouter = require("./routes/inspection");
 const customerAuthRouter = require("./routes/authCust");
 const catalogCustRouter = require("./routes/catalogCust");
+const profileRouter = require("./routes/profile");
 const promotionRouter = require("./routes/promotions");
 
 app.use("/auth", authRouter);
@@ -34,6 +35,7 @@ app.use("/grade", gradeRouter);
 app.use("/inspection", inspectionRouter);
 app.use("/auth/customer", customerAuthRouter);
 app.use("/catalog/customer", catalogCustRouter);
+app.use("/profile", profileRouter);
 app.use("/promotion", promotionRouter);
 
 app.get("/api", (req, res) => {
