@@ -34,7 +34,6 @@
   .stars { color: #b45309; font-size: 14px; }
   .badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
   .placeholder { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; border: 2px dashed #e5e7eb; border-radius: 8px; }
-
   .flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
   .flow-step { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fafafa; }
   .flow-step h3 { font-size: 14px; margin: 0 0 8px; }
@@ -46,7 +45,6 @@
   @media (max-width: 760px) {
     .flow-steps, .summary-grid { grid-template-columns: 1fr; }
   }
-
 </style>
 </head>
 <body>
@@ -81,7 +79,7 @@
       </div>
       <div id="authStatus"></div>
     </div>
-    <div class="card hidden" id="sessionCard" style="display:none;">
+    <div class="card" id="sessionCard" style="display:none;">
       <h2>Session</h2>
       <p class="muted">Logged in as <b id="sessionName"></b> (customer_id: <span id="sessionId"></span>)</p>
       <button class="secondary" onclick="logout()">Logout</button>
@@ -121,40 +119,24 @@
     </div>
   </div>
 
-<<<<<<< HEAD
-  <!-- OTHER FEATURES TAB -->
-=======
   <!-- GRADE TAB -->
-<div class="panel" id="panel-grade">
+  <div class="panel" id="panel-grade">
     <div class="card">
-        <h2>
-            Current Hygiene Grade
-            <span class="muted" id="gradeSubtitle">(Select a stall first)</span>
-        </h2>
-        <div id="currentGradeDisplay" class="placeholder">
-            Select a stall on the Browse tab.
-        </div>
+      <h2>Current Hygiene Grade <span class="muted" id="gradeSubtitle">(Select a stall first)</span></h2>
+      <div id="currentGradeDisplay" class="placeholder">Select a stall on the Browse tab.</div>
     </div>
     <div class="card">
-        <h2>Grade History</h2>
-        <div id="gradeHistory">
-            <div class="muted">
-                Select a stall first.
-            </div>
-        </div>
+      <h2>Grade History</h2>
+      <div id="gradeHistory"><div class="muted">Select a stall first.</div></div>
     </div>
   </div>
 
-  <!-- OTHER FEATURES TAB (placeholders for teammates) -->
->>>>>>> d1351ff517952b2315e435ca054d3db2b140f0b3
+  <!-- OTHER FEATURES TAB -->
   <div class="panel" id="panel-other">
 
     <div class="card">
       <h2>Order Management Journey <span class="badge">Yuzhen</span></h2>
-      <p class="muted">
-        One end-to-end flow for Cart → Checkout → Payment → Complete Order.
-        Each step calls the corresponding backend API and shows the returned result.
-      </p>
+      <p class="muted">One end-to-end flow for Cart → Checkout → Payment → Complete Order.</p>
 
       <div class="flow-steps">
         <div class="flow-step">
@@ -163,7 +145,6 @@
           <button class="small" onclick="loadCart()">View Cart</button>
           <div id="cartList" class="muted" style="margin-top:8px;">Your cart is empty.</div>
         </div>
-
         <div class="flow-step">
           <h3>2. Checkout</h3>
           <div class="endpoint">POST /orders/checkout</div>
@@ -171,7 +152,6 @@
           <button class="small" onclick="checkout()">Create Order</button>
           <div id="checkoutStatus"></div>
         </div>
-
         <div class="flow-step">
           <h3>3. Payment</h3>
           <div class="endpoint">POST /payment</div>
@@ -252,6 +232,8 @@ function updateSessionUI() {
   }
 }
 
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+
 async function register() {
   const name = document.getElementById("authName").value;
   const email = document.getElementById("authEmail").value;
@@ -263,11 +245,7 @@ async function register() {
       body: JSON.stringify({ name, email, password }),
     });
     const data = await res.json();
-    showStatus(
-  "authStatus",
-  res.ok ? "Registered! Now log in." : data.message,
-  res.ok
-);
+    showStatus("authStatus", res.ok ? "Registered! Now log in." : data.message, res.ok);
   } catch (err) {
     showStatus("authStatus", "Network error: " + err.message, false);
   }
@@ -306,11 +284,13 @@ function logout() {
   updateSessionUI();
 }
 
+// ─── STALLS & MENU ───────────────────────────────────────────────────────────
+
 async function loadStalls() {
   try {
     const res = await fetch(`${API}/catalog/customer/stalls`);
     const result = await res.json();
-    const stalls=result.data;
+    const stalls = result.data;
     const select = document.getElementById("stallSelect");
     select.innerHTML = '<option value="">-- Select a stall --</option>';
     stalls.forEach((s) => {
@@ -348,32 +328,42 @@ async function onStallChange() {
 }
 
 async function loadMenuItems(stallId) {
-  const res = await fetch(`${API}/catalog/customer/stalls/${stallId}/menu`);
-  const result = await res.json();
-  const items = result.data;
-  const container = document.getElementById("menuList");
-  container.innerHTML = "";
-  if (items.length === 0) {
-    container.innerHTML = '<p class="muted">No menu items for this stall yet.</p>';
-    return;
-  }
-  for (const item of items) {
-    const likeRes = await fetch(`${API}/likes/item/${item.item_id}`);
-    const likeData = await likeRes.json();
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.innerHTML = `
-      <span>${item.item_name} - $${Number(item.price).toFixed(2)}</span>
-      <span>
-        <span class="muted">${likeData.count} like(s)</span>
-        <button class="small" onclick="addToCart(${item.item_id})">Add to Cart</button>
-        <button class="small" onclick="likeItem(${item.item_id})">Like</button>
-        <button class="small secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
-      </span>
-    `;
-    container.appendChild(div);
+  try {
+    const res = await fetch(`${API}/catalog/customer/stalls/${stallId}/menu`);
+    const result = await res.json();
+    const items = result.data;
+    const container = document.getElementById("menuList");
+    container.innerHTML = "";
+    if (!items || items.length === 0) {
+      container.innerHTML = '<p class="muted">No menu items for this stall yet.</p>';
+      return;
+    }
+    for (const item of items) {
+      let likeCount = 0;
+      try {
+        const likeRes = await fetch(`${API}/likes/item/${item.item_id}`);
+        const likeData = await likeRes.json();
+        likeCount = likeData.count || 0;
+      } catch (_) {}
+      const div = document.createElement("div");
+      div.className = "menu-item";
+      div.innerHTML = `
+        <span>${item.item_name} - $${Number(item.price).toFixed(2)}</span>
+        <span>
+          <span class="muted">${likeCount} like(s)</span>
+          <button class="small" onclick="addToCart(${item.item_id})">Add to Cart</button>
+          <button class="small" onclick="likeItem(${item.item_id})">Like</button>
+          <button class="small secondary" onclick="unlikeItem(${item.item_id})">Unlike</button>
+        </span>
+      `;
+      container.appendChild(div);
+    }
+  } catch (err) {
+    document.getElementById("menuList").innerHTML = `<p class="status err">Could not load menu: ${err.message}</p>`;
   }
 }
+
+// ─── LIKES (SA-38) ───────────────────────────────────────────────────────────
 
 async function likeItem(itemId) {
   if (!token) return alert("Please log in first (Account tab).");
@@ -398,13 +388,13 @@ async function unlikeItem(itemId) {
   await loadMenuItems(selectedStallId);
 }
 
+// ─── FEEDBACK (SA-37) ────────────────────────────────────────────────────────
+
 async function submitFeedback() {
   if (!token) return showStatus("feedbackStatus", "Please log in first (Account tab).", false);
   if (!selectedStallId) return showStatus("feedbackStatus", "Please select a stall in the Browse tab first.", false);
-
   const rating = parseInt(document.getElementById("feedbackRating").value);
   const comment = document.getElementById("feedbackComment").value;
-
   const res = await fetch(`${API}/feedback`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -419,110 +409,130 @@ async function submitFeedback() {
 }
 
 async function loadFeedback(stallId) {
-  const res = await fetch(`${API}/feedback/stall/${stallId}`);
-  const feedbackList = await res.json();
-  const container = document.getElementById("feedbackList");
-  if (feedbackList.length === 0) {
-    container.innerHTML = '<p class="muted">No feedback yet for this stall.</p>';
-    return;
+  try {
+    const res = await fetch(`${API}/feedback/stall/${stallId}`);
+    const feedbackList = await res.json();
+    const container = document.getElementById("feedbackList");
+    if (!feedbackList || feedbackList.length === 0) {
+      container.innerHTML = '<p class="muted">No feedback yet for this stall.</p>';
+      return;
+    }
+    container.innerHTML = "";
+    feedbackList.forEach((f) => {
+      const div = document.createElement("div");
+      div.className = "feedback-entry";
+      div.innerHTML = `
+        <span class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
+        <b>${f.customer_name}</b>
+        <p style="margin:4px 0;">${f.comment || "(no comment)"}</p>
+        <span class="muted">${new Date(f.created_at).toLocaleString()}</span>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    document.getElementById("feedbackList").innerHTML = `<p class="status err">Could not load feedback: ${err.message}</p>`;
   }
-  container.innerHTML = "";
-  feedbackList.forEach((f) => {
-    const div = document.createElement("div");
-    div.className = "feedback-entry";
-    div.innerHTML = `
-      <span class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
-      <b>${f.customer_name}</b>
-      <p style="margin:4px 0;">${f.comment || "(no comment)"}</p>
-      <span class="muted">${new Date(f.created_at).toLocaleString()}</span>
-    `;
-    container.appendChild(div);
-  });
 }
 
-<<<<<<< HEAD
+// ─── GRADES (Weiye) ──────────────────────────────────────────────────────────
 
+async function loadGrades(stallId) {
+  const currentDisplay = document.getElementById("currentGradeDisplay");
+  const history = document.getElementById("gradeHistory");
+  currentDisplay.innerHTML = "Loading...";
+  history.innerHTML = "Loading...";
+  try {
+    const inspectionRes = await fetch(`${API}/inspection`);
+    const inspections = await inspectionRes.json();
+    const gradeRes = await fetch(`${API}/grade`);
+    const grades = await gradeRes.json();
+
+    const inspectionMap = {};
+    inspections.forEach(i => { inspectionMap[i.inspection_id] = i; });
+
+    gradeHistory = grades.filter(g => {
+      const inspection = inspectionMap[g.inspection_id];
+      return inspection && inspection.stall_id == stallId;
+    });
+    gradeHistory.sort((a, b) => new Date(b.issued_date) - new Date(a.issued_date));
+
+    if (gradeHistory.length === 0) {
+      currentDisplay.innerHTML = '<div class="placeholder">No hygiene grades yet.</div>';
+      history.innerHTML = "No grade history.";
+      return;
+    }
+
+    const current = gradeHistory[0];
+    const previous = gradeHistory[1];
+    const trend = getTrend(current.grade, previous ? previous.grade : null);
+    let trendColour = "#6b7280";
+    if (trend === "▲") trendColour = "#22c55e";
+    if (trend === "▼") trendColour = "#ef4444";
+    const gradeColours = { "A": "#ef4444", "B": "#22c55e", "C": "#92400e", "D": "#6b7280" };
+
+    currentDisplay.innerHTML = `
+      <div style="text-align:center;">
+        <div style="display:flex;justify-content:center;align-items:center;gap:18px;">
+          <span style="font-size:90px;font-weight:bold;color:${gradeColours[current.grade]}">${current.grade}</span>
+          <span style="font-size:55px;font-weight:bold;color:${trendColour}">${trend}</span>
+        </div>
+        <div class="muted">Valid until ${new Date(current.valid_until).toLocaleDateString()}</div>
+      </div>`;
+
+    history.innerHTML = "";
+    gradeHistory.forEach(g => {
+      const div = document.createElement("div");
+      div.className = "feedback-entry";
+      div.innerHTML = `
+        <span style="color:${gradeColours[g.grade]};font-weight:600;font-size:15px;">Grade ${g.grade}</span>
+        <p style="margin:4px 0;">Issued: ${new Date(g.issued_date).toLocaleDateString()}</p>
+        <span class="muted">Valid Until: ${new Date(g.valid_until).toLocaleDateString()}</span>`;
+      history.appendChild(div);
+    });
+  } catch (err) {
+    currentDisplay.innerHTML = '<div class="placeholder">Could not load grade data.</div>';
+    history.innerHTML = "";
+  }
+}
+
+function gradeValue(grade) {
+  switch (grade) { case "A": return 4; case "B": return 3; case "C": return 2; case "D": return 1; default: return 0; }
+}
+
+function getTrend(current, last) {
+  if (!last) return "=";
+  const c = gradeValue(current), p = gradeValue(last);
+  if (c > p) return "▲";
+  if (c < p) return "▼";
+  return "=";
+}
+
+// ─── ORDER MANAGEMENT (Yuzhen) ───────────────────────────────────────────────
 
 function logApi(method, endpoint, payload, response, ok) {
   const log = document.getElementById("apiLog");
   if (!log) return;
-
   const time = new Date().toLocaleTimeString();
   const requestText = payload ? `\nRequest: ${JSON.stringify(payload, null, 2)}` : "";
-  const responseText = `\nResponse: ${JSON.stringify(response, null, 2)}`;
-
-  log.textContent =
-    `[${time}] ${method} ${endpoint}` +
-    requestText +
-    responseText +
-    `\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
-}
-
-async function runOrderFlow() {
-  if (!requireCustomer()) return;
-
-  const stallId = Number(
-    document.getElementById("checkoutStall").value || selectedStallId
-  );
-
-  if (!stallId) {
-    showStatus("checkoutStatus", "Select a stall or enter a Stall ID first.", false);
-    return;
-  }
-
-  await loadCart();
-
-  const checkoutWorked = await checkout();
-  if (!checkoutWorked) return;
-
-  const method = document.getElementById("paymentMethod").value;
-  if (!method) {
-    showStatus("paymentStatus", "Select a payment method.", false);
-    return;
-  }
-
-  const paymentWorked = await makePayment();
-  if (!paymentWorked) return;
-
-  await checkStatus();
-  await loadHistory();
+  log.textContent = `[${time}] ${method} ${endpoint}${requestText}\nResponse: ${JSON.stringify(response, null, 2)}\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
 }
 
 function requireCustomer() {
-  if (!customerId) {
-    alert("Please log in first using the Account tab.");
-    switchTab("account");
-    return false;
-  }
+  if (!customerId) { alert("Please log in first using the Account tab."); switchTab("account"); return false; }
   return true;
 }
 
 async function addToCart(itemId) {
   if (!requireCustomer()) return;
-
   try {
     const res = await fetch(`${API}/cart`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId: Number(customerId),
-        itemId: Number(itemId),
-        quantity: 1
-      })
+      body: JSON.stringify({ customerId: Number(customerId), itemId: Number(itemId), quantity: 1 })
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || data.details || "Unable to add item to cart.");
-    }
-
-    logApi("POST", "/cart", {
-      customerId: Number(customerId),
-      itemId: Number(itemId),
-      quantity: 1
-    }, data, true);
-
+    if (!res.ok) throw new Error(data.error || "Unable to add item to cart.");
+    logApi("POST", "/cart", { customerId: Number(customerId), itemId: Number(itemId), quantity: 1 }, data, true);
     alert(data.message || "Item added to cart.");
   } catch (err) {
     logApi("POST", "/cart", null, { error: err.message }, false);
@@ -532,45 +542,20 @@ async function addToCart(itemId) {
 
 async function loadCart() {
   if (!requireCustomer()) return;
-
   const container = document.getElementById("cartList");
   container.innerHTML = '<p class="muted">Loading cart...</p>';
-
   try {
     const res = await fetch(`${API}/cart/${customerId}`);
     const items = await res.json();
-
-    if (!res.ok) {
-      throw new Error(items.error || items.details || "Unable to load cart.");
-    }
-
+    if (!res.ok) throw new Error(items.error || "Unable to load cart.");
     logApi("GET", `/cart/${customerId}`, null, items, true);
-
-    if (!Array.isArray(items) || items.length === 0) {
-      container.innerHTML = '<p class="muted">Your cart is empty.</p>';
-      return;
-    }
-
-    const total = items.reduce(
-      (sum, item) => sum + Number(item.subtotal || 0),
-      0
-    );
-
+    if (!Array.isArray(items) || items.length === 0) { container.innerHTML = '<p class="muted">Your cart is empty.</p>'; return; }
+    const total = items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
     container.innerHTML = items.map(item => `
       <div class="menu-item">
-        <span>
-          <b>${item.item_name}</b><br>
-          <span class="muted">
-            $${Number(item.price).toFixed(2)} × ${item.quantity}
-          </span>
-        </span>
+        <span><b>${item.item_name}</b><br><span class="muted">$${Number(item.price).toFixed(2)} × ${item.quantity}</span></span>
         <span><b>$${Number(item.subtotal).toFixed(2)}</b></span>
-      </div>
-    `).join("") + `
-      <p style="text-align:right; margin-top:12px;">
-        <b>Total: $${total.toFixed(2)}</b>
-      </p>
-    `;
+      </div>`).join("") + `<p style="text-align:right;margin-top:12px;"><b>Total: $${total.toFixed(2)}</b></p>`;
   } catch (err) {
     logApi("GET", `/cart/${customerId}`, null, { error: err.message }, false);
     container.innerHTML = `<div class="status err">${err.message}</div>`;
@@ -579,115 +564,52 @@ async function loadCart() {
 
 async function checkout() {
   if (!requireCustomer()) return;
-
-  const enteredStallId = Number(
-    document.getElementById("checkoutStall").value
-  );
-
-  const stallId = enteredStallId || Number(selectedStallId);
-  const statusBox = document.getElementById("checkoutStatus");
-
-  if (!stallId) {
-    showStatus(
-      "checkoutStatus",
-      "Select a stall in Browse or enter a Stall ID.",
-      false
-    );
-    return;
-  }
-
+  const stallId = Number(document.getElementById("checkoutStall").value) || Number(selectedStallId);
+  if (!stallId) { showStatus("checkoutStatus", "Select a stall in Browse or enter a Stall ID.", false); return; }
   try {
     const res = await fetch(`${API}/orders/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId: Number(customerId),
-        stallId
-      })
+      body: JSON.stringify({ customerId: Number(customerId), stallId })
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || data.details || "Checkout failed.");
-    }
-
+    if (!res.ok) throw new Error(data.error || "Checkout failed.");
     localStorage.setItem("latestOrderId", data.orderId);
     document.getElementById("paymentOrderId").value = data.orderId;
     document.getElementById("statusOrderId").value = data.orderId;
-
-    statusBox.className = "status ok";
-    statusBox.innerHTML = `
-      Order created successfully.<br>
-      Order ID: <b>${data.orderId}</b><br>
-      Total: <b>$${Number(data.totalPrice).toFixed(2)}</b>
-    `;
-
-    logApi("POST", "/orders/checkout", {
-      customerId: Number(customerId),
-      stallId
-    }, data, true);
-
+    const box = document.getElementById("checkoutStatus");
+    box.className = "status ok";
+    box.innerHTML = `Order created. Order ID: <b>${data.orderId}</b> | Total: <b>$${Number(data.totalPrice).toFixed(2)}</b>`;
+    logApi("POST", "/orders/checkout", { customerId: Number(customerId), stallId }, data, true);
     await loadCart();
     return true;
   } catch (err) {
-    logApi("POST", "/orders/checkout", {
-      customerId: Number(customerId),
-      stallId
-    }, { error: err.message }, false);
+    logApi("POST", "/orders/checkout", null, { error: err.message }, false);
     showStatus("checkoutStatus", err.message, false);
     return false;
   }
 }
 
 async function makePayment() {
-  const orderId = Number(
-    document.getElementById("paymentOrderId").value ||
-    localStorage.getItem("latestOrderId")
-  );
-
-  const paymentMethod =
-    document.getElementById("paymentMethod").value;
-
-  if (!orderId) {
-    showStatus("paymentStatus", "Enter an Order ID or checkout first.", false);
-    return;
-  }
-
+  const orderId = Number(document.getElementById("paymentOrderId").value || localStorage.getItem("latestOrderId"));
+  const paymentMethod = document.getElementById("paymentMethod").value;
+  if (!orderId) { showStatus("paymentStatus", "Enter an Order ID or checkout first.", false); return; }
   try {
     const res = await fetch(`${API}/payment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, paymentMethod })
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || data.details || "Payment failed.");
-    }
-
+    if (!res.ok) throw new Error(data.error || "Payment failed.");
     localStorage.setItem("latestOrderId", orderId);
     document.getElementById("statusOrderId").value = orderId;
-
-    showStatus(
-      "paymentStatus",
-      `Payment successful. Payment ID: ${data.paymentId}. Method: ${paymentMethod}.`,
-      true
-    );
-
-    logApi("POST", "/payment", {
-      orderId,
-      paymentMethod
-    }, data, true);
-
+    showStatus("paymentStatus", `Payment successful. Payment ID: ${data.paymentId}. Method: ${paymentMethod}.`, true);
+    logApi("POST", "/payment", { orderId, paymentMethod }, data, true);
     await checkStatus();
     return true;
   } catch (err) {
-    logApi("POST", "/payment", {
-      orderId,
-      paymentMethod
-    }, { error: err.message }, false);
+    logApi("POST", "/payment", null, { error: err.message }, false);
     showStatus("paymentStatus", err.message, false);
     return false;
   }
@@ -695,37 +617,21 @@ async function makePayment() {
 
 async function loadHistory() {
   if (!requireCustomer()) return;
-
   const container = document.getElementById("historyList");
-  container.innerHTML = '<p class="muted">Loading order history...</p>';
-
+  container.innerHTML = '<p class="muted">Loading...</p>';
   try {
     const res = await fetch(`${API}/orders/history/${customerId}`);
     const orders = await res.json();
-
-    if (!res.ok) {
-      throw new Error(orders.error || orders.details || "Unable to load order history.");
-    }
-
+    if (!res.ok) throw new Error(orders.error || "Unable to load order history.");
     logApi("GET", `/orders/history/${customerId}`, null, orders, true);
-
-    if (!Array.isArray(orders) || orders.length === 0) {
-      container.innerHTML = '<p class="muted">No orders found.</p>';
-      return;
-    }
-
+    if (!Array.isArray(orders) || orders.length === 0) { container.innerHTML = '<p class="muted">No orders found.</p>'; return; }
     container.innerHTML = orders.map(order => `
       <div class="feedback-entry">
         <b>Order #${order.order_id}</b>
-        <p style="margin:4px 0;">
-          Total: $${Number(order.total_price || 0).toFixed(2)}
-        </p>
+        <p style="margin:4px 0;">Total: $${Number(order.total_price || 0).toFixed(2)}</p>
         <span class="badge">${order.status}</span>
-        <span class="muted">
-          ${order.created_at ? new Date(order.created_at).toLocaleString() : ""}
-        </span>
-      </div>
-    `).join("");
+        <span class="muted">${order.created_at ? new Date(order.created_at).toLocaleString() : ""}</span>
+      </div>`).join("");
   } catch (err) {
     logApi("GET", `/orders/history/${customerId}`, null, { error: err.message }, false);
     container.innerHTML = `<div class="status err">${err.message}</div>`;
@@ -733,215 +639,37 @@ async function loadHistory() {
 }
 
 async function checkStatus() {
-  const orderId = Number(
-    document.getElementById("statusOrderId").value ||
-    localStorage.getItem("latestOrderId")
-  );
-
-  if (!orderId) {
-    showStatus("statusResult", "Enter an Order ID.", false);
-    return;
-  }
-
+  const orderId = Number(document.getElementById("statusOrderId").value || localStorage.getItem("latestOrderId"));
+  if (!orderId) { showStatus("statusResult", "Enter an Order ID.", false); return; }
   try {
     const res = await fetch(`${API}/orders/${orderId}/status`);
     const order = await res.json();
-
-    if (!res.ok) {
-      throw new Error(order.error || order.details || "Unable to check order status.");
-    }
-
+    if (!res.ok) throw new Error(order.error || "Unable to check order status.");
     const result = Array.isArray(order) ? order[0] : order;
-
     logApi("GET", `/orders/${orderId}/status`, null, result, true);
-
-    document.getElementById("statusResult").className = "status ok";
-    document.getElementById("statusResult").innerHTML = `
-      Order ID: <b>${result.order_id ?? orderId}</b><br>
-      Status: <b>${result.status}</b>
-    `;
+    const el = document.getElementById("statusResult");
+    el.className = "status ok";
+    el.innerHTML = `Order ID: <b>${result.order_id ?? orderId}</b><br>Status: <b>${result.status}</b>`;
   } catch (err) {
     logApi("GET", `/orders/${orderId}/status`, null, { error: err.message }, false);
     showStatus("statusResult", err.message, false);
   }
-=======
-async function loadGrades(stallId){
-
-    const currentDisplay=document.getElementById("currentGradeDisplay");
-    const history=document.getElementById("gradeHistory");
-
-    currentDisplay.innerHTML="Loading...";
-    history.innerHTML="Loading...";
-
-    const inspectionRes=await fetch(`${API}/inspection`);
-    const inspections=await inspectionRes.json();
-
-    const gradeRes=await fetch(`${API}/grade`);
-    const grades=await gradeRes.json();
-
-    const inspectionMap={};
-
-    inspections.forEach(i=>{
-
-        inspectionMap[i.inspection_id]=i;
-
-    });
-
-    gradeHistory=grades.filter(g=>{
-
-        const inspection=inspectionMap[g.inspection_id];
-
-        return inspection && inspection.stall_id==stallId;
-
-    });
-
-    gradeHistory.sort((a,b)=>{
-
-        return new Date(b.issued_date)-new Date(a.issued_date);
-
-    });
-
-    if(gradeHistory.length==0){
-
-        currentDisplay.innerHTML=`
-            <div class="placeholder">
-                No hygiene grades yet.
-            </div>
-        `;
-
-        history.innerHTML="No grade history.";
-
-        return;
-
-    }
-
-    const current=gradeHistory[0];
-    const previous=gradeHistory[1];
-
-    const trend=getTrend(
-
-        current.grade,
-        previous?previous.grade:null
-
-    );
-
-    let trendColour = "#6b7280"; // Grey
-
-    if (trend === "▲")
-        trendColour = "#22c55e"; // Green
-
-    if (trend === "▼")
-        trendColour = "#ef4444"; // Red
-
-    const gradeColours = {
-        "A": "#ef4444",   // Red
-        "B": "#22c55e",   // Green
-        "C": "#92400e",   // Brown
-        "D": "#6b7280"    // Grey
-    };
-
-    currentDisplay.innerHTML = `
-    <div style="text-align:center;">
-
-        <div style="
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            gap:18px;
-        ">
-
-            <span style="
-                font-size:90px;
-                font-weight:bold;
-                color:${gradeColours[current.grade]};
-            ">
-                ${current.grade}
-            </span>
-
-            <span style="
-                font-size:55px;
-                font-weight:bold;
-                color:${trendColour};
-            ">
-                ${trend}
-            </span>
-
-        </div>
-
-        <div class="muted">
-            Valid until
-            ${new Date(current.valid_until).toLocaleDateString()}
-        </div>
-
-    </div>
-    `;
-
-    history.innerHTML="";
-
-    gradeHistory.forEach(g=>{
-
-        const div=document.createElement("div");
-
-        div.className="feedback-entry";
-
-        div.innerHTML = `
-            <span style="
-                color:${gradeColours[g.grade]};
-                font-weight:600;
-                font-size:15px;
-            ">
-                Grade ${g.grade}
-            </span>
-
-            <p style="margin:4px 0;">
-                Issued: ${new Date(g.issued_date).toLocaleDateString()}
-            </p>
-
-            <span class="muted">
-                Valid Until: ${new Date(g.valid_until).toLocaleDateString()}
-            </span>
-        `;
-
-        history.appendChild(div);
-
-    });
-
 }
 
-function gradeValue(grade){
-
-    switch(grade){
-
-        case "A": return 4;
-        case "B": return 3;
-        case "C": return 2;
-        case "D": return 1;
-
-        default: return 0;
-
-    }
-
+async function runOrderFlow() {
+  if (!requireCustomer()) return;
+  const stallId = Number(document.getElementById("checkoutStall").value || selectedStallId);
+  if (!stallId) { showStatus("checkoutStatus", "Select a stall or enter a Stall ID first.", false); return; }
+  await loadCart();
+  const checkoutOk = await checkout();
+  if (!checkoutOk) return;
+  const paymentOk = await makePayment();
+  if (!paymentOk) return;
+  await checkStatus();
+  await loadHistory();
 }
 
-function getTrend(current,last){
-
-    if(!last)
-        return "=";
-
-    const currentValue = gradeValue(current);
-    const previousValue = gradeValue(last);
-
-    if(currentValue>previousValue)
-        return "▲";
-
-    if(currentValue<previousValue)
-        return "▼";
-
-    return "=";
-
->>>>>>> d1351ff517952b2315e435ca054d3db2b140f0b3
-}
-
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 updateSessionUI();
 loadStalls();
 </script>
