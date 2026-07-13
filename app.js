@@ -17,6 +17,8 @@ const inspectionRouter = require("./routes/inspection");
 const cartRouter = require("./routes/cart");
 const ordersRouter = require("./routes/orders");
 const paymentRouter = require("./routes/payment");
+const catalogCustRouter = require("./routes/catalogCust");
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +40,7 @@ app.use("/inspection", inspectionRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/payment", paymentRouter);
+app.use("/catalog/customer", catalogCustRouter);
 
 // Basic API test route
 app.get("/api", (req, res) => {
