@@ -25,6 +25,7 @@ const inspectionRouter = require("./routes/inspection");
 const customerAuthRouter = require("./routes/authCust");
 const catalogCustRouter = require("./routes/catalogCust");
 const profileRouter = require("./routes/profile");
+const menuRouter = require("./routes/menu");
 const promotionRouter = require("./routes/promotions");
 
 app.use("/auth", authRouter);
@@ -36,6 +37,7 @@ app.use("/inspection", inspectionRouter);
 app.use("/auth/customer", customerAuthRouter);
 app.use("/catalog/customer", catalogCustRouter);
 app.use("/profile", profileRouter);
+app.use("/menu", menuRouter);
 app.use("/promotion", promotionRouter);
 
 app.get("/api", (req, res) => {
