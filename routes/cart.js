@@ -6,6 +6,9 @@ const cartController = require("../controller/cartController");
 // View customer's cart
 router.get("/:customerId", cartController.getCart);
 
+router.get("/test", (req, res) => {
+  res.json({ message: "Cart route is working" });
+});
 // Add item to cart
 router.post("/", cartController.addToCart);
 

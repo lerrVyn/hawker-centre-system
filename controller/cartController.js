@@ -16,22 +16,25 @@ const updateSchema = Joi.object({
 // =========================
 
 exports.getCart = async (req, res) => {
+  try {
+    const customerId = parseInt(req.params.customerId, 10);
 
-    try {
-
-        const customerId = parseInt(req.params.customerId);
-
-        const cart = await cartModel.getCart(customerId);
-
-        res.json(cart);
-
-    } catch (err) {
-
-        console.error(err);
-        res.status(500).json({ error: "Unable to retrieve cart." });
-
+    if (Number.isNaN(customerId)) {
+      return res.status(400).json({
+        error: "Invalid customer ID."
+      });
     }
 
+    const cart = await cartModel.getCart(customerId);
+    res.json(cart);
+  } catch (err) {
+    console.error("GET CART ERROR:", err);
+
+    res.status(500).json({
+      error: "Unable to retrieve cart.",
+      details: err.message
+    });
+  }
 };
 
 // =========================

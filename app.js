@@ -24,6 +24,9 @@ const gradeRouter = require("./routes/grade");
 const inspectionRouter = require("./routes/inspection");
 const customerAuthRouter = require("./routes/authCust");
 const catalogCustRouter = require("./routes/catalogCust");
+const cartRouter = require("./routes/cart");
+const ordersRouter = require("./routes/orders");
+const paymentRouter = require("./routes/payment");
 
 app.use("/auth", authRouter);
 app.use("/feedback", feedbackRouter);
@@ -33,6 +36,9 @@ app.use("/grade", gradeRouter);
 app.use("/inspection", inspectionRouter);
 app.use("/auth/customer", customerAuthRouter);
 app.use("/catalog/customer", catalogCustRouter);
+app.use("/cart", cartRouter);
+app.use("/orders", ordersRouter);
+app.use("/payment", paymentRouter);
 
 app.get("/api", (req, res) => {
   res.send("Hawker Centre API is running.");

@@ -2,123 +2,113 @@ const Joi = require("joi");
 const paymentModel = require("../models/paymentModel");
 
 const paymentSchema = Joi.object({
-    orderId: Joi.number().integer().required(),
-    paymentMethod: Joi.string().max(50).required()
+  orderId: Joi.number().integer().positive().required(),
+  paymentMethod: Joi.string()
+    .valid("Cash", "NETS", "PayNow")
+    .required()
 });
 
-const updateSchema = Joi.object({
-    paymentStatus: Joi.string().max(50).required()
+const updatePaymentSchema = Joi.object({
+  paymentStatus: Joi.string()
+    .valid("Pending", "Paid", "Failed", "Refunded")
+    .required()
 });
-
-// ==========================
-// Make Payment
-// ==========================
 
 exports.makePayment = async (req, res) => {
+  const { error, value } = paymentSchema.validate(req.body);
 
-    const { error, value } = paymentSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      error: error.details[0].message
+    });
+  }
 
-    if (error)
-        return res.status(400).json({
-            error: error.details[0].message
-        });
+  try {
+    const result = await paymentModel.makePayment(
+      value.orderId,
+      value.paymentMethod
+    );
 
-    try {
+    return res.status(201).json({
+      message: "Payment completed successfully.",
+      paymentId: result.paymentId
+    });
+  } catch (err) {
+    console.error("PAYMENT ERROR:", err);
 
-        const payment = await paymentModel.makePayment(value);
-
-        res.status(201).json({
-
-            message: "Payment successful.",
-            paymentId: payment.paymentId
-
-        });
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-
-            error: "Payment failed."
-
-        });
-
-    }
-
+    return res.status(500).json({
+      error: "Payment failed.",
+      details: err.message
+    });
+  }
 };
-
-// ==========================
-// Get Payment
-// ==========================
 
 exports.getPayment = async (req, res) => {
+  const orderId = Number(req.params.orderId);
 
-    const orderId = parseInt(req.params.orderId);
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({
+      error: "Invalid order ID."
+    });
+  }
 
-    if (isNaN(orderId))
-        return res.status(400).json({
-            error: "Invalid order ID."
-        });
+  try {
+    const payment = await paymentModel.getPayment(orderId);
 
-    try {
-
-        const payment = await paymentModel.getPayment(orderId);
-
-        if (!payment)
-            return res.status(404).json({
-                error: "Payment not found."
-            });
-
-        res.json(payment);
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            error: "Unable to retrieve payment."
-        });
-
+    if (!payment) {
+      return res.status(404).json({
+        error: "Payment not found."
+      });
     }
 
+    return res.status(200).json(payment);
+  } catch (err) {
+    console.error("GET PAYMENT ERROR:", err);
+
+    return res.status(500).json({
+      error: "Unable to retrieve payment.",
+      details: err.message
+    });
+  }
 };
 
-// ==========================
-// Update Payment Status
-// ==========================
-
 exports.updatePaymentStatus = async (req, res) => {
+  const paymentId = Number(req.params.paymentId);
+  const { error, value } = updatePaymentSchema.validate(req.body);
 
-    const paymentId = parseInt(req.params.paymentId);
+  if (!Number.isInteger(paymentId) || paymentId <= 0) {
+    return res.status(400).json({
+      error: "Invalid payment ID."
+    });
+  }
 
-    const { error, value } = updateSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      error: error.details[0].message
+    });
+  }
 
-    if (error)
-        return res.status(400).json({
-            error: error.details[0].message
-        });
+  try {
+    const updated = await paymentModel.updatePaymentStatus(
+      paymentId,
+      value.paymentStatus
+    );
 
-    try {
-
-        await paymentModel.updatePaymentStatus(paymentId, value.paymentStatus);
-
-        res.json({
-
-            message: "Payment status updated."
-
-        });
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-
-            error: "Unable to update payment."
-
-        });
-
+    if (!updated) {
+      return res.status(404).json({
+        error: "Payment not found."
+      });
     }
 
+    return res.status(200).json({
+      message: "Payment status updated successfully."
+    });
+  } catch (err) {
+    console.error("UPDATE PAYMENT ERROR:", err);
+
+    return res.status(500).json({
+      error: "Unable to update payment status.",
+      details: err.message
+    });
+  }
 };
