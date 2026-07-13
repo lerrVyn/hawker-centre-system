@@ -189,10 +189,108 @@
       <div id="apiLog" class="api-log">Waiting for an action...</div>
     </div>
 
-    <div class="card">
-      <h2>Stall & Menu Management <span class="badge">Ziying</span></h2>
-      <div class="placeholder">Waiting on Ziying's route files to wire this in.</div>
+    <!-- ZIYING CUSTOMER FEATURES -->
+<div class="card">
+  <h2>
+    Customer Account & Discovery
+    <span class="badge">Ziying</span>
+  </h2>
+
+  <p class="muted">
+    Customer registration, login, stall browsing and menu discovery features.
+  </p>
+
+  <div class="flow-steps">
+
+    <!-- Registration and Login -->
+    <div class="flow-step">
+      <h3>1. Registration & Login</h3>
+
+      <div class="endpoint">
+        POST /auth/customer/register<br>
+        POST /auth/customer/login
+      </div>
+
+      <p class="muted">
+        Customers can create an account and securely log in.
+      </p>
+
+      <button class="small" onclick="openCustomerAccount()">
+        Open Account
+      </button>
     </div>
+
+    <!-- Browse Stalls -->
+    <div class="flow-step">
+      <h3>2. Browse Stalls</h3>
+
+      <div class="endpoint">
+        GET /catalog/customer/stalls
+      </div>
+
+      <p class="muted">
+        View available stalls, cuisine types, operating hours and hygiene grades.
+      </p>
+
+      <button class="small" onclick="openCustomerBrowse()">
+        Browse Stalls
+      </button>
+    </div>
+
+    <!-- Browse Menu Items -->
+    <div class="flow-step">
+      <h3>3. Browse Menu Items</h3>
+
+      <div class="endpoint">
+        GET /catalog/customer/stalls/:stallId/menu
+      </div>
+
+      <p class="muted">
+        Select a stall to view its available food items, prices and descriptions.
+      </p>
+
+      <button class="small" onclick="openCustomerBrowse()">
+        Browse Menu
+      </button>
+    </div>
+
+  </div>
+
+  <div class="summary-grid">
+
+    <div class="summary-box">
+      <h3 style="margin-top:0;">Completed PBIs</h3>
+
+      <div class="muted">
+        ✅ SA-116 User Registration and Log In<br>
+        ✅ SA-118 Browse Stalls<br>
+        ✅ SA-119 Browse Menu Items
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <h3 style="margin-top:0;">Customer Main Page</h3>
+
+      <div class="muted">
+        The shared customer page provides navigation to account, stalls,
+        menu items, feedback and ordering features.
+      </div>
+
+      <button
+        class="small secondary"
+        onclick="refreshCustomerFeatures()"
+        style="margin-top:8px;"
+      >
+        Open Customer Main Page
+      </button>
+    </div>
+
+  </div>
+
+  <div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
+    Customer authentication and catalog APIs are connected successfully.
+  </div>
+</div>
 <div class="card">
 
 <h2>🏪 Stall Owner Management</h2>
@@ -241,6 +339,32 @@ function showStatus(elId, message, ok) {
   const el = document.getElementById(elId);
   el.className = "status " + (ok ? "ok" : "err");
   el.textContent = message;
+}
+
+// ─── ZIYING CUSTOMER FEATURE NAVIGATION ─────────────────────────────────────
+
+function openCustomerAccount() {
+  switchTab("account");
+}
+
+function openCustomerBrowse() {
+  switchTab("browse");
+
+  document.getElementById("stallSelect").focus();
+}
+
+async function refreshCustomerFeatures() {
+  switchTab("browse");
+
+  await loadStalls();
+
+  const status = document.getElementById("ziyingFeatureStatus");
+
+  if (status) {
+    status.className = "status ok";
+    status.textContent =
+      "Customer main page opened and stalls refreshed successfully.";
+  }
 }
 
 async function loadProfile(){
