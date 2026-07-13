@@ -327,7 +327,7 @@ async function loadMenuItems(stallId) {
     const div = document.createElement("div");
     div.className = "menu-item";
     div.innerHTML = `
-      <span>${item.item_name} - $${item.price}</span>
+      <span>${item.item_name} - $${Number(item.price).toFixed(2)}</span>
       <span>
         <span class="muted">${likeData.count} like(s)</span>
         <button class="small" onclick="likeItem(${item.item_id})">Like</button>
