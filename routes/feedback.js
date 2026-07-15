@@ -9,7 +9,8 @@ const verifyToken = require("../middleware/authMiddleware");
 const feedbackSchema = Joi.object({
   stall_id: Joi.number().integer().required(),
   rating: Joi.number().integer().min(1).max(5).required(),
-  comment: Joi.string().max(500).allow("", null),
+  // A rating alone is not a useful written review; reject whitespace too.
+  comment: Joi.string().trim().min(1).max(500).required(),
 });
 
 // CREATE - submit feedback for a stall (SA-37, protected)
