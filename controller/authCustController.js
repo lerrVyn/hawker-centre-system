@@ -124,7 +124,7 @@ exports.login = async (req, res) => {
     // 4. Create login token
     const token = jwt.sign(
       {
-        customerId: customer.customer_id,
+        customer_id: customer.customer_id,
         email: customer.email
       },
       process.env.JWT_SECRET,
