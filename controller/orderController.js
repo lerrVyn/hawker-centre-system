@@ -1,15 +1,10 @@
 const Joi = require("joi");
 const orderModel = require("../models/orderModel");
 
-// Validation Schema
 const checkoutSchema = Joi.object({
-  customerId: Joi.number().integer().required(),
-  stallId: Joi.number().integer().required()
+  customerId: Joi.number().integer().positive().required()
 });
 
-// ==========================
-// Checkout
-// ==========================
 exports.checkout = async (req, res) => {
   const { error, value } = checkoutSchema.validate(req.body);
 
@@ -20,19 +15,19 @@ exports.checkout = async (req, res) => {
   }
 
   try {
-    const order = await orderModel.checkout(value);
+    const result = await orderModel.checkout(value.customerId);
 
-    res.status(201).json({
-      message: "Checkout successful.",
-      orderId: order.orderId,
-      totalPrice: order.totalPrice
+    return res.status(201).json({
+      message: "Order created successfully.",
+      orderId: result.orderId,
+      totalPrice: result.totalPrice
     });
-
   } catch (err) {
-    console.error(err);
+    console.error("CHECKOUT ERROR:", err);
 
-    res.status(500).json({
-      error: "Checkout failed."
+    return res.status(500).json({
+      error: "Checkout failed.",
+      details: err.message
     });
   }
 };

@@ -6,40 +6,33 @@ const dbConfig = require("../dbConfig");
 // ======================
 
 async function getCart(customerId) {
+  const pool = await sql.connect(dbConfig);
 
-    const pool = await sql.connect(dbConfig);
-
-    const result = await pool.request()
-
-        .input("customerId", sql.Int, customerId)
-
-        .query(`
-
-        SELECT
-
-            ci.cart_item_id,
-            mi.item_id,
-            mi.item_name,
-            mi.price,
-            ci.quantity,
-            (ci.quantity * mi.price) AS subtotal
-
-        FROM carts c
-
-        INNER JOIN cart_items ci
-
+  const result = await pool
+    .request()
+    .input("customerId", sql.Int, customerId)
+    .query(`
+      SELECT
+        ci.cart_item_id,
+        mi.item_id,
+        mi.item_name,
+        mi.stall_id,
+        s.stall_name,
+        ci.price,
+        ci.quantity,
+        CAST(ci.price * ci.quantity AS DECIMAL(10,2)) AS subtotal
+      FROM dbo.carts c
+      INNER JOIN dbo.cart_items ci
         ON c.cart_id = ci.cart_id
-
-        INNER JOIN menu_items mi
-
+      INNER JOIN dbo.menu_items mi
         ON ci.item_id = mi.item_id
-
-        WHERE c.customer_id = @customerId
-
+      INNER JOIN dbo.stalls s
+        ON mi.stall_id = s.stall_id
+      WHERE c.customer_id = @customerId
+      ORDER BY s.stall_name, ci.cart_item_id
     `);
 
-    return result.recordset;
-
+  return result.recordset;
 }
 
 // ======================

@@ -45,6 +45,19 @@
   @media (max-width: 760px) {
     .flow-steps, .summary-grid { grid-template-columns: 1fr; }
   }
+
+  /* Yuzhen order flow only */
+  .yz-checkout-shell { max-width: 720px; margin: 0 auto; }
+  .yz-progress { display: flex; gap: 8px; margin-bottom: 16px; }
+  .yz-progress-step { flex: 1; padding: 9px; text-align: center; border-radius: 6px; background: #f3f4f6; color: #6b7280; font-size: 13px; }
+  .yz-progress-step.active { background: #fef3c7; color: #92400e; font-weight: 600; }
+  .yz-order-page { display: none; }
+  .yz-order-page.active { display: block; }
+  .yz-cart-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+  .yz-cart-total { text-align: right; font-size: 18px; font-weight: 700; margin-top: 14px; }
+  .yz-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+  .yz-complete-mark { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #166534; font-size: 32px; font-weight: 700; }
+  .yz-summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -134,62 +147,80 @@
   <!-- OTHER FEATURES TAB -->
   <div class="panel" id="panel-other">
 
-    <div class="card">
+    <div class="card yz-checkout-shell">
       <h2>Order Function & Management <span class="badge">Yuzhen</span></h2>
-      <p class="muted">One end-to-end flow for Cart → Checkout → Payment → Complete Order.</p>
 
-      <div class="flow-steps">
-        <div class="flow-step">
-          <h3>1. Cart</h3>
-          <div class="endpoint">GET /cart/:customerId<br>POST /cart</div>
-          <button class="small" onclick="loadCart()">View Cart</button>
-          <div id="cartList" class="muted" style="margin-top:8px;">Your cart is empty.</div>
-        </div>
-        <div class="flow-step">
-          <h3>2. Checkout</h3>
-          <div class="endpoint">POST /orders/checkout</div>
-          <input id="checkoutStall" type="number" placeholder="Stall ID" />
-          <button class="small" onclick="checkout()">Create Order</button>
-          <div id="checkoutStatus"></div>
-        </div>
-        <div class="flow-step">
-          <h3>3. Payment</h3>
-          <div class="endpoint">POST /payment</div>
-          <input id="paymentOrderId" type="number" placeholder="Order ID" />
-          <select id="paymentMethod">
-            <option value="Cash">Cash</option>
-            <option value="NETS">NETS</option>
-            <option value="PayNow">PayNow</option>
-          </select>
-          <button class="small" onclick="makePayment()">Pay Now</button>
-          <div id="paymentStatus"></div>
-        </div>
+      <div class="yz-progress">
+        <div id="yzProgressCart" class="yz-progress-step active">1. Cart</div>
+        <div id="yzProgressPayment" class="yz-progress-step">2. Payment</div>
+        <div id="yzProgressComplete" class="yz-progress-step">3. Complete</div>
       </div>
 
-      <div class="flow-actions">
-        <button onclick="runOrderFlow()">Run Full Flow</button>
-        <button class="secondary" onclick="loadHistory()">Load Order History</button>
-        <button class="secondary" onclick="checkStatus()">Refresh Order Status</button>
+      <div id="yzPageCart" class="yz-order-page active">
+        <h2>Your Cart</h2>
+        <div id="cartList" class="muted">Your cart is empty.</div>
+        <div id="yzCartTotal" class="yz-cart-total"></div>
+
+        <div class="yz-actions">
+          <button class="secondary" onclick="switchTab('browse')">Continue Shopping</button>
+          <button onclick="yzCheckout()">Checkout</button>
+        </div>
+
+        <div id="checkoutStatus"></div>
       </div>
 
-      <input id="statusOrderId" type="number" placeholder="Order ID for status/history checks" style="margin-top:10px;" />
+      <div id="yzPagePayment" class="yz-order-page">
+        <h2>Payment</h2>
 
-      <div class="summary-grid">
-        <div class="summary-box">
-          <h3 style="margin-top:0;">Order Status</h3>
-          <div id="statusResult" class="muted">No order checked.</div>
+        <div class="yz-summary">
+          <p>Order number: <b id="yzPaymentOrderNumber">-</b></p>
+          <p>Total amount: <b id="yzPaymentTotal">$0.00</b></p>
         </div>
-        <div class="summary-box">
-          <h3 style="margin-top:0;">Order History</h3>
-          <div id="historyList" class="muted">No orders loaded.</div>
+
+        <select id="paymentMethod">
+          <option value="">-- Select payment method --</option>
+          <option value="Cash">Cash</option>
+          <option value="NETS">NETS</option>
+          <option value="PayNow">PayNow</option>
+        </select>
+
+        <div class="yz-actions">
+          <button class="secondary" onclick="yzShowPage('cart')">Back</button>
+          <button onclick="makePayment()">Make Payment</button>
         </div>
+
+        <div id="paymentStatus"></div>
       </div>
 
-      <h3 style="font-size:14px; margin:16px 0 8px;">Backend API Activity</h3>
-      <div id="apiLog" class="api-log">Waiting for an action...</div>
+      <div id="yzPageComplete" class="yz-order-page">
+        <div style="text-align:center;">
+          <div class="yz-complete-mark">✓</div>
+          <h2>Payment Complete</h2>
+          <p class="muted">Your order has been created and payment has been recorded.</p>
+        </div>
+
+        <div class="yz-summary">
+          <p>Order number: <b id="yzCompleteOrderNumber">-</b></p>
+          <p>Payment ID: <b id="yzCompletePaymentId">-</b></p>
+          <p>Payment method: <b id="yzCompletePaymentMethod">-</b></p>
+          <p>Order status: <b id="yzCompleteOrderStatus">-</b></p>
+        </div>
+
+        <div class="yz-actions">
+          <button class="secondary" onclick="loadHistory()">View Order History</button>
+          <button onclick="yzStartNewOrder()">Start New Order</button>
+        </div>
+
+        <div id="historyList" class="muted" style="margin-top:12px;"></div>
+      </div>
+
+      <div id="apiLog" class="api-log" style="margin-top:16px;">Waiting for an action...</div>
+
+      <input id="paymentOrderId" type="hidden" />
+      <input id="statusOrderId" type="hidden" />
+      <div id="statusResult" style="display:none;"></div>
     </div>
-
-    <!-- ZIYING CUSTOMER FEATURES -->
+<!-- ZIYING CUSTOMER FEATURES -->
 <div class="card">
   <h2>
     Customer Account & Discovery
@@ -881,165 +912,399 @@ function getTrend(current, last) {
 
 // ─── ORDER MANAGEMENT (Yuzhen) ───────────────────────────────────────────────
 
+let yzCurrentOrderId = Number(localStorage.getItem("latestOrderId")) || null;
+let yzCurrentOrderTotal = Number(localStorage.getItem("latestOrderTotal")) || 0;
+
 function logApi(method, endpoint, payload, response, ok) {
   const log = document.getElementById("apiLog");
   if (!log) return;
+
   const time = new Date().toLocaleTimeString();
-  const requestText = payload ? `\nRequest: ${JSON.stringify(payload, null, 2)}` : "";
-  log.textContent = `[${time}] ${method} ${endpoint}${requestText}\nResponse: ${JSON.stringify(response, null, 2)}\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
+  const requestText = payload
+    ? `\nRequest: ${JSON.stringify(payload, null, 2)}`
+    : "";
+
+  log.textContent =
+    `[${time}] ${method} ${endpoint}` +
+    requestText +
+    `\nResponse: ${JSON.stringify(response, null, 2)}` +
+    `\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
 }
 
 function requireCustomer() {
-  if (!customerId) { alert("Please log in first using the Account tab."); switchTab("account"); return false; }
+  if (!customerId) {
+    alert("Please log in first using the Account tab.");
+    switchTab("account");
+    return false;
+  }
   return true;
+}
+
+function yzShowPage(page) {
+  document.querySelectorAll(".yz-order-page").forEach(el => {
+    el.classList.remove("active");
+  });
+
+  document.querySelectorAll(".yz-progress-step").forEach(el => {
+    el.classList.remove("active");
+  });
+
+  const map = {
+    cart: ["yzPageCart", "yzProgressCart"],
+    payment: ["yzPagePayment", "yzProgressPayment"],
+    complete: ["yzPageComplete", "yzProgressComplete"]
+  };
+
+  const target = map[page];
+  if (!target) return;
+
+  document.getElementById(target[0]).classList.add("active");
+  document.getElementById(target[1]).classList.add("active");
 }
 
 async function addToCart(itemId) {
   if (!requireCustomer()) return;
+
+  const payload = {
+    customerId: Number(customerId),
+    itemId: Number(itemId),
+    quantity: 1
+  };
+
   try {
     const res = await fetch(`${API}/cart`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: Number(customerId), itemId: Number(itemId), quantity: 1 })
+      body: JSON.stringify(payload)
     });
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Unable to add item to cart.");
-    logApi("POST", "/cart", { customerId: Number(customerId), itemId: Number(itemId), quantity: 1 }, data, true);
+
+    if (!res.ok) {
+      throw new Error(
+        data.error || data.details || "Unable to add item to cart."
+      );
+    }
+
+    logApi("POST", "/cart", payload, data, true);
     alert(data.message || "Item added to cart.");
+
+    switchTab("other");
+    yzShowPage("cart");
+    await loadCart();
   } catch (err) {
-    logApi("POST", "/cart", null, { error: err.message }, false);
+    logApi("POST", "/cart", payload, { error: err.message }, false);
     alert(err.message);
   }
 }
 
 async function loadCart() {
-  if (!requireCustomer()) return;
+  if (!requireCustomer()) return false;
+
   const container = document.getElementById("cartList");
+  const totalBox = document.getElementById("yzCartTotal");
+
   container.innerHTML = '<p class="muted">Loading cart...</p>';
+  totalBox.textContent = "";
+
   try {
     const res = await fetch(`${API}/cart/${customerId}`);
     const items = await res.json();
-    if (!res.ok) throw new Error(items.error || "Unable to load cart.");
+
+    if (!res.ok) {
+      throw new Error(
+        items.error || items.details || "Unable to load cart."
+      );
+    }
+
     logApi("GET", `/cart/${customerId}`, null, items, true);
-    if (!Array.isArray(items) || items.length === 0) { container.innerHTML = '<p class="muted">Your cart is empty.</p>'; return; }
-    const total = items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
+
+    if (!Array.isArray(items) || items.length === 0) {
+      container.innerHTML = '<p class="muted">Your cart is empty.</p>';
+      return false;
+    }
+
+    yzCurrentOrderTotal = items.reduce(
+      (sum, item) => sum + Number(item.subtotal || 0),
+      0
+    );
+
     container.innerHTML = items.map(item => `
-      <div class="menu-item">
-        <span><b>${item.item_name}</b><br><span class="muted">$${Number(item.price).toFixed(2)} × ${item.quantity}</span></span>
-        <span><b>$${Number(item.subtotal).toFixed(2)}</b></span>
-      </div>`).join("") + `<p style="text-align:right;margin-top:12px;"><b>Total: $${total.toFixed(2)}</b></p>`;
+      <div class="yz-cart-row">
+        <div>
+          <b>${item.item_name}</b>
+          <div class="muted">
+            $${Number(item.price).toFixed(2)} × ${item.quantity}
+          </div>
+        </div>
+        <b>$${Number(item.subtotal).toFixed(2)}</b>
+      </div>
+    `).join("");
+
+    totalBox.textContent =
+      `Total: $${yzCurrentOrderTotal.toFixed(2)}`;
+
+    return true;
   } catch (err) {
-    logApi("GET", `/cart/${customerId}`, null, { error: err.message }, false);
-    container.innerHTML = `<div class="status err">${err.message}</div>`;
+    logApi(
+      "GET",
+      `/cart/${customerId}`,
+      null,
+      { error: err.message },
+      false
+    );
+
+    container.innerHTML =
+      `<div class="status err">${err.message}</div>`;
+
+    return false;
   }
 }
 
-async function checkout() {
+async function yzCheckout() {
   if (!requireCustomer()) return;
-  const stallId = Number(document.getElementById("checkoutStall").value) || Number(selectedStallId);
-  if (!stallId) { showStatus("checkoutStatus", "Select a stall in Browse or enter a Stall ID.", false); return; }
+
+  const hasItems = await loadCart();
+
+  if (!hasItems) {
+    showStatus(
+      "checkoutStatus",
+      "Add at least one item before checkout.",
+      false
+    );
+    return;
+  }
+
+  const stallId = Number(selectedStallId);
+
+  if (!stallId) {
+    showStatus(
+      "checkoutStatus",
+      "Select the stall in Browse Stalls before checkout.",
+      false
+    );
+    return;
+  }
+
+  const payload = {
+    customerId: Number(customerId)
+  };
+
+  const res = await fetch(`${API}/orders/checkout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+});
+
   try {
     const res = await fetch(`${API}/orders/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: Number(customerId), stallId })
+      body: JSON.stringify({
+      customerId: Number(customerId)
+    })
     });
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Checkout failed.");
-    localStorage.setItem("latestOrderId", data.orderId);
-    document.getElementById("paymentOrderId").value = data.orderId;
-    document.getElementById("statusOrderId").value = data.orderId;
-    const box = document.getElementById("checkoutStatus");
-    box.className = "status ok";
-    box.innerHTML = `Order created. Order ID: <b>${data.orderId}</b> | Total: <b>$${Number(data.totalPrice).toFixed(2)}</b>`;
-    logApi("POST", "/orders/checkout", { customerId: Number(customerId), stallId }, data, true);
-    await loadCart();
-    return true;
+
+    if (!res.ok) {
+      throw new Error(
+        data.details || data.error || "Checkout failed."
+      );
+    }
+
+    yzCurrentOrderId = Number(data.orderId);
+    yzCurrentOrderTotal = Number(data.totalPrice);
+
+    localStorage.setItem("latestOrderId", yzCurrentOrderId);
+    localStorage.setItem("latestOrderTotal", yzCurrentOrderTotal);
+
+    document.getElementById("paymentOrderId").value =
+      yzCurrentOrderId;
+
+    document.getElementById("statusOrderId").value =
+      yzCurrentOrderId;
+
+    document.getElementById("yzPaymentOrderNumber").textContent =
+      yzCurrentOrderId;
+
+    document.getElementById("yzPaymentTotal").textContent =
+      `$${yzCurrentOrderTotal.toFixed(2)}`;
+
+    logApi("POST", "/orders/checkout", payload, data, true);
+    yzShowPage("payment");
   } catch (err) {
-    logApi("POST", "/orders/checkout", null, { error: err.message }, false);
+    logApi(
+      "POST",
+      "/orders/checkout",
+      payload,
+      { error: err.message },
+      false
+    );
+
     showStatus("checkoutStatus", err.message, false);
-    return false;
   }
 }
 
 async function makePayment() {
-  const orderId = Number(document.getElementById("paymentOrderId").value || localStorage.getItem("latestOrderId"));
-  const paymentMethod = document.getElementById("paymentMethod").value;
-  if (!orderId) { showStatus("paymentStatus", "Enter an Order ID or checkout first.", false); return; }
+  const orderId =
+    yzCurrentOrderId ||
+    Number(document.getElementById("paymentOrderId").value);
+
+  const paymentMethod =
+    document.getElementById("paymentMethod").value;
+
+  if (!orderId) {
+    showStatus(
+      "paymentStatus",
+      "Checkout and create an order first.",
+      false
+    );
+    return;
+  }
+
+  if (!paymentMethod) {
+    showStatus(
+      "paymentStatus",
+      "Select a payment method.",
+      false
+    );
+    return;
+  }
+
+  const payload = {
+    orderId,
+    paymentMethod
+  };
+
   try {
     const res = await fetch(`${API}/payment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, paymentMethod })
+      body: JSON.stringify(payload)
     });
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Payment failed.");
-    localStorage.setItem("latestOrderId", orderId);
-    document.getElementById("statusOrderId").value = orderId;
-    showStatus("paymentStatus", `Payment successful. Payment ID: ${data.paymentId}. Method: ${paymentMethod}.`, true);
-    logApi("POST", "/payment", { orderId, paymentMethod }, data, true);
-    await checkStatus();
-    return true;
+
+    if (!res.ok) {
+      throw new Error(
+        data.error || data.details || "Payment failed."
+      );
+    }
+
+    const status = await yzGetOrderStatus(orderId);
+
+    document.getElementById("yzCompleteOrderNumber").textContent =
+      orderId;
+
+    document.getElementById("yzCompletePaymentId").textContent =
+      data.paymentId ?? "-";
+
+    document.getElementById("yzCompletePaymentMethod").textContent =
+      paymentMethod;
+
+    document.getElementById("yzCompleteOrderStatus").textContent =
+      status || "Paid";
+
+    logApi("POST", "/payment", payload, data, true);
+    yzShowPage("complete");
   } catch (err) {
-    logApi("POST", "/payment", null, { error: err.message }, false);
+    logApi(
+      "POST",
+      "/payment",
+      payload,
+      { error: err.message },
+      false
+    );
+
     showStatus("paymentStatus", err.message, false);
-    return false;
+  }
+}
+
+async function yzGetOrderStatus(orderId) {
+  try {
+    const res = await fetch(`${API}/orders/${orderId}/status`);
+    const data = await res.json();
+
+    if (!res.ok) return null;
+
+    const result = Array.isArray(data) ? data[0] : data;
+    return result.status || null;
+  } catch (_) {
+    return null;
   }
 }
 
 async function loadHistory() {
   if (!requireCustomer()) return;
+
   const container = document.getElementById("historyList");
-  container.innerHTML = '<p class="muted">Loading...</p>';
+
+  container.innerHTML =
+    '<p class="muted">Loading order history...</p>';
+
   try {
-    const res = await fetch(`${API}/orders/history/${customerId}`);
+    const res = await fetch(
+      `${API}/orders/history/${customerId}`
+    );
+
     const orders = await res.json();
-    if (!res.ok) throw new Error(orders.error || "Unable to load order history.");
-    logApi("GET", `/orders/history/${customerId}`, null, orders, true);
-    if (!Array.isArray(orders) || orders.length === 0) { container.innerHTML = '<p class="muted">No orders found.</p>'; return; }
+
+    if (!res.ok) {
+      throw new Error(
+        orders.error ||
+        orders.details ||
+        "Unable to load order history."
+      );
+    }
+
+    logApi(
+      "GET",
+      `/orders/history/${customerId}`,
+      null,
+      orders,
+      true
+    );
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      container.innerHTML =
+        '<p class="muted">No orders found.</p>';
+      return;
+    }
+
     container.innerHTML = orders.map(order => `
       <div class="feedback-entry">
         <b>Order #${order.order_id}</b>
-        <p style="margin:4px 0;">Total: $${Number(order.total_price || 0).toFixed(2)}</p>
+        <p style="margin:4px 0;">
+          Total: $${Number(order.total_price || 0).toFixed(2)}
+        </p>
         <span class="badge">${order.status}</span>
-        <span class="muted">${order.created_at ? new Date(order.created_at).toLocaleString() : ""}</span>
-      </div>`).join("");
+      </div>
+    `).join("");
   } catch (err) {
-    logApi("GET", `/orders/history/${customerId}`, null, { error: err.message }, false);
-    container.innerHTML = `<div class="status err">${err.message}</div>`;
+    container.innerHTML =
+      `<div class="status err">${err.message}</div>`;
   }
 }
 
-async function checkStatus() {
-  const orderId = Number(document.getElementById("statusOrderId").value || localStorage.getItem("latestOrderId"));
-  if (!orderId) { showStatus("statusResult", "Enter an Order ID.", false); return; }
-  try {
-    const res = await fetch(`${API}/orders/${orderId}/status`);
-    const order = await res.json();
-    if (!res.ok) throw new Error(order.error || "Unable to check order status.");
-    const result = Array.isArray(order) ? order[0] : order;
-    logApi("GET", `/orders/${orderId}/status`, null, result, true);
-    const el = document.getElementById("statusResult");
-    el.className = "status ok";
-    el.innerHTML = `Order ID: <b>${result.order_id ?? orderId}</b><br>Status: <b>${result.status}</b>`;
-  } catch (err) {
-    logApi("GET", `/orders/${orderId}/status`, null, { error: err.message }, false);
-    showStatus("statusResult", err.message, false);
-  }
+function yzStartNewOrder() {
+  yzCurrentOrderId = null;
+  yzCurrentOrderTotal = 0;
+
+  localStorage.removeItem("latestOrderId");
+  localStorage.removeItem("latestOrderTotal");
+
+  document.getElementById("paymentMethod").value = "";
+  document.getElementById("paymentStatus").innerHTML = "";
+  document.getElementById("checkoutStatus").innerHTML = "";
+  document.getElementById("historyList").innerHTML = "";
+
+  switchTab("browse");
+  yzShowPage("cart");
 }
 
-async function runOrderFlow() {
-  if (!requireCustomer()) return;
-  const stallId = Number(document.getElementById("checkoutStall").value || selectedStallId);
-  if (!stallId) { showStatus("checkoutStatus", "Select a stall or enter a Stall ID first.", false); return; }
-  await loadCart();
-  const checkoutOk = await checkout();
-  if (!checkoutOk) return;
-  const paymentOk = await makePayment();
-  if (!paymentOk) return;
-  await checkStatus();
-  await loadHistory();
-}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 updateSessionUI();
