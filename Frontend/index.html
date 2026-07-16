@@ -650,44 +650,93 @@ async function loadMenuItems(stallId) {
 
 async function likeItem(itemId) {
   if (!token) return alert("Please log in first (Account tab).");
-  const res = await fetch(`${API}/likes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ item_id: itemId }),
-  });
-  const data = await res.json();
-  alert(data.message || data.error);
-  await loadMenuItems(selectedStallId);
-}
 
-async function unlikeItem(itemId) {
-  if (!token) return alert("Please log in first (Account tab).");
-  const res = await fetch(`${API}/likes/${itemId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  alert(data.message || data.error);
-  await loadMenuItems(selectedStallId);
-}
+  try {
+    const res = await fetch(`${API}/likes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ item_id: itemId }),
+    });
 
-// ─── FEEDBACK (SA-37) ────────────────────────────────────────────────────────
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Unable to like this item.");
+    }
+
+    alert(data.message || "Item liked");
+    await loadMenuItems(selectedStallId);
+  } catch (err) {
+    alert(err.message || "Unable to like this item.");
+  }
+}
 
 async function submitFeedback() {
-  if (!token) return showStatus("feedbackStatus", "Please log in first (Account tab).", false);
-  if (!selectedStallId) return showStatus("feedbackStatus", "Please select a stall in the Browse tab first.", false);
-  const rating = parseInt(document.getElementById("feedbackRating").value);
-  const comment = document.getElementById("feedbackComment").value;
-  const res = await fetch(`${API}/feedback`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ stall_id: parseInt(selectedStallId), rating, comment }),
-  });
-  const data = await res.json();
-  showStatus("feedbackStatus", res.ok ? "Feedback submitted!" : data.error, res.ok);
-  if (res.ok) {
+  if (!token) {
+    return showStatus(
+      "feedbackStatus",
+      "Please log in first (Account tab).",
+      false
+    );
+  }
+
+  if (!selectedStallId) {
+    return showStatus(
+      "feedbackStatus",
+      "Please select a stall in the Browse tab first.",
+      false
+    );
+  }
+
+  const rating = parseInt(
+    document.getElementById("feedbackRating").value
+  );
+
+  const comment = document
+    .getElementById("feedbackComment")
+    .value
+    .trim();
+
+  if (!comment) {
+    return showStatus(
+      "feedbackStatus",
+      "Please enter a feedback comment.",
+      false
+    );
+  }
+
+  try {
+    const res = await fetch(`${API}/feedback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        stall_id: parseInt(selectedStallId),
+        rating,
+        comment,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Unable to submit feedback.");
+    }
+
+    showStatus("feedbackStatus", "Feedback submitted!", true);
     document.getElementById("feedbackComment").value = "";
     await loadFeedback(selectedStallId);
+  } catch (err) {
+    showStatus(
+      "feedbackStatus",
+      err.message || "Unable to submit feedback.",
+      false
+    );
   }
 }
 
@@ -695,25 +744,65 @@ async function loadFeedback(stallId) {
   try {
     const res = await fetch(`${API}/feedback/stall/${stallId}`);
     const feedbackList = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        feedbackList.error || "Unable to load feedback."
+      );
+    }
+
     const container = document.getElementById("feedbackList");
+
     if (!feedbackList || feedbackList.length === 0) {
-      container.innerHTML = '<p class="muted">No feedback yet for this stall.</p>';
+      container.innerHTML =
+        '<p class="muted">No feedback yet for this stall.</p>';
       return;
     }
+
     container.innerHTML = "";
+
     feedbackList.forEach((f) => {
       const div = document.createElement("div");
       div.className = "feedback-entry";
+
       div.innerHTML = `
         <span class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
         <b>${f.customer_name}</b>
-        <p style="margin:4px 0;">${f.comment || "(no comment)"}</p>
+        <p style="margin:4px 0;">${f.comment}</p>
         <span class="muted">${new Date(f.created_at).toLocaleString()}</span>
       `;
+
       container.appendChild(div);
     });
   } catch (err) {
-    document.getElementById("feedbackList").innerHTML = `<p class="status err">Could not load feedback: ${err.message}</p>`;
+    document.getElementById("feedbackList").innerHTML =
+      `<p class="status err">Could not load feedback: ${err.message}</p>`;
+  }
+}
+
+async function unlikeItem(itemId) {
+  if (!token) {
+    return alert("Please log in first (Account tab).");
+  }
+
+  try {
+    const res = await fetch(`${API}/likes/${itemId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Unable to unlike this item.");
+    }
+
+    alert(data.message || "Item unliked");
+    await loadMenuItems(selectedStallId);
+  } catch (err) {
+    alert(err.message || "Unable to unlike this item.");
   }
 }
 
