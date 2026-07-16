@@ -2,20 +2,21 @@
 
 const menuModel = require("../models/menuModel");
 
-// View all menu items for a stall
+// ==========================
+// Get all menu items by stall
+// ==========================
 exports.getMenuItems = async (req, res) => {
-
     try {
 
-        const stallId = Number(req.params.stallId);
+        console.log("getMenuItems called");
 
-        if (!Number.isInteger(stallId) || stallId <= 0) {
+        const stallId = parseInt(req.params.stallId);
 
+        if (isNaN(stallId) || stallId <= 0) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid stall ID."
             });
-
         }
 
         const menuItems = await menuModel.getMenuItems(stallId);
@@ -28,7 +29,7 @@ exports.getMenuItems = async (req, res) => {
 
     } catch (error) {
 
-        console.error("View menu error:", error);
+        console.error(error);
 
         return res.status(500).json({
             success: false,
@@ -36,22 +37,22 @@ exports.getMenuItems = async (req, res) => {
         });
 
     }
-
 };
 
-
-// View one menu item
+// ==========================
+// Get one menu item
+// ==========================
 exports.getMenuItem = async (req, res) => {
 
     try {
 
-        const itemId = Number(req.params.itemId);
+        const itemId = parseInt(req.params.itemId);
 
-        if (!Number.isInteger(itemId) || itemId <= 0) {
+        if (isNaN(itemId) || itemId <= 0) {
 
             return res.status(400).json({
                 success: false,
-                message: "Invalid item ID."
+                message: "Invalid menu item ID."
             });
 
         }
@@ -75,7 +76,7 @@ exports.getMenuItem = async (req, res) => {
 
     } catch (error) {
 
-        console.error("View menu item error:", error);
+        console.error(error);
 
         return res.status(500).json({
             success: false,
@@ -86,8 +87,9 @@ exports.getMenuItem = async (req, res) => {
 
 };
 
-
+// ==========================
 // Create menu item
+// ==========================
 exports.createMenuItem = async (req, res) => {
 
     try {
@@ -101,11 +103,7 @@ exports.createMenuItem = async (req, res) => {
             image_url
         } = req.body;
 
-        if (
-            !stall_id ||
-            !item_name ||
-            price == null
-        ) {
+        if (!stall_id || !item_name || price == null) {
 
             return res.status(400).json({
                 success: false,
@@ -123,7 +121,14 @@ exports.createMenuItem = async (req, res) => {
 
         }
 
-        await menuModel.createMenuItem(req.body);
+        await menuModel.createMenuItem({
+            stall_id,
+            item_name,
+            description,
+            price,
+            is_available,
+            image_url
+        });
 
         return res.status(201).json({
             success: true,
@@ -132,7 +137,7 @@ exports.createMenuItem = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Create menu item error:", error);
+        console.error(error);
 
         return res.status(500).json({
             success: false,
@@ -143,24 +148,25 @@ exports.createMenuItem = async (req, res) => {
 
 };
 
-
+// ==========================
 // Update menu item
+// ==========================
 exports.updateMenuItem = async (req, res) => {
 
     try {
 
-        const itemId = Number(req.params.itemId);
+        const itemId = parseInt(req.params.itemId);
 
-        if (!Number.isInteger(itemId) || itemId <= 0) {
+        if (isNaN(itemId) || itemId <= 0) {
 
             return res.status(400).json({
                 success: false,
-                message: "Invalid item ID."
+                message: "Invalid menu item ID."
             });
 
         }
 
-        if (req.body.price <= 0) {
+        if (req.body.price !== undefined && req.body.price <= 0) {
 
             return res.status(400).json({
                 success: false,
@@ -178,7 +184,7 @@ exports.updateMenuItem = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Update menu item error:", error);
+        console.error(error);
 
         return res.status(500).json({
             success: false,
@@ -189,19 +195,20 @@ exports.updateMenuItem = async (req, res) => {
 
 };
 
-
+// ==========================
 // Delete menu item
+// ==========================
 exports.deleteMenuItem = async (req, res) => {
 
     try {
 
-        const itemId = Number(req.params.itemId);
+        const itemId = parseInt(req.params.itemId);
 
-        if (!Number.isInteger(itemId) || itemId <= 0) {
+        if (isNaN(itemId) || itemId <= 0) {
 
             return res.status(400).json({
                 success: false,
-                message: "Invalid item ID."
+                message: "Invalid menu item ID."
             });
 
         }
@@ -215,7 +222,7 @@ exports.deleteMenuItem = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Delete menu item error:", error);
+        console.error(error);
 
         return res.status(500).json({
             success: false,

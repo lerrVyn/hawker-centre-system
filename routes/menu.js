@@ -5,27 +5,19 @@ const router = express.Router();
 
 const menuController = require("../controller/menuController");
 
-// Test route
-router.get("/test", (req, res) => {
-    res.json({
-        success: true,
-        message: "Menu router works!"
-    });
-});
-
-// Get all menu items for a stall
+// View all menu items for a stall
 router.get(
     "/stall/:stallId",
     menuController.getMenuItems
 );
 
-// Get one menu item
+// View one menu item
 router.get(
     "/:itemId",
     menuController.getMenuItem
 );
 
-// Add new menu item
+// Add menu item
 router.post(
     "/",
     menuController.createMenuItem
