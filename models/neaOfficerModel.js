@@ -60,8 +60,16 @@ async function updateOfficer(id, officerInfo) {
     try {
         const connection = await poolPromise;
         const oldOfficer = await retrieveOfficerById(id);
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(officerInfo.password, salt);
+
+        const name = officerInfo.name ?? oldOfficer.name;
+        const email = officerInfo.email ?? oldOfficer.email;
+        let hash = oldOfficer.password_hash;
+        
+        if (officerInfo.password) {
+            const salt = await bcrypt.genSalt(10);
+            hash = await bcrypt.hash(officerInfo.password, salt);
+        }
+
         const query = `
             update nea_officers
             set
@@ -76,15 +84,15 @@ async function updateOfficer(id, officerInfo) {
         ///////////////////////////////////////////
         const request = await connection.request()
         request.input("id", id);
-        request.input("name", officerInfo.name);
-        request.input("email", officerInfo.email);
+        request.input("name", name);
+        request.input("email", email);
         request.input("hash", hash);
         const result = await request.query(query);
 
         if (result.rowsAffected[0] === 0) {
             return null
         }
-        return retrieveOfficerById(id);
+        return await retrieveOfficerById(id);
     }
     catch (error) {
         console.log(`Database error: ${error}`)

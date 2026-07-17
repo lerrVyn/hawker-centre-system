@@ -1,7 +1,7 @@
 // Wei Ye
 const express = require("express");
 const { validateID } = require("../middleware/idValidation");
-const { validateOfficer } = require("../middleware/officerValidation");
+const { validateOfficer, validateOfficerUpdate } = require("../middleware/officerValidation");
 const router = express.Router();
 
 const officerController = require("../controller/neaOfficerController")
@@ -10,7 +10,7 @@ const officerController = require("../controller/neaOfficerController")
 router.get("/", officerController.retrieveAllOfficer);
 router.get("/:id", validateID, officerController.retrieveOfficerById);
 router.post("/", validateOfficer, officerController.createOfficer);
-router.put("/:id", validateID, validateOfficer, officerController.updateOfficer);
+router.put("/:id", validateID, validateOfficerUpdate, officerController.updateOfficer);
 router.delete("/:id", validateID, officerController.deleteOfficer);
 
 module.exports = router;
