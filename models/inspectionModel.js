@@ -5,7 +5,25 @@ const { getGrade } = require("./utility");
 async function retrieveAllInspection() {
     try {
         const connection = await poolPromise;
-        const query = `select inspection_id, stall_id, officer_id, score, remarks, inspection_date from inspections`
+        const query = `
+            SELECT
+                i.inspection_id,
+                i.stall_id,
+                s.stall_name,
+                i.officer_id,
+                o.name AS officer_name,
+                i.score,
+                hg.grade,
+                i.remarks,
+                i.inspection_date
+            FROM inspections i
+            JOIN stalls s
+                ON i.stall_id = s.stall_id
+            JOIN nea_officers o
+                ON i.officer_id = o.officer_id
+            LEFT JOIN hygiene_grades hg
+                ON i.inspection_id = hg.inspection_id
+        `
         
         const result = await connection.request().query(query);
         
@@ -20,7 +38,25 @@ async function retrieveAllInspection() {
 async function retrieveInspectionByID(id) {
     try {
         const connection = await poolPromise;
-        const query = `select inspection_id, stall_id, officer_id, score, remarks, inspection_date from inspections where inspection_id = @id`
+        const query = `
+            SELECT
+                i.inspection_id,
+                i.stall_id,
+                s.stall_name,
+                i.officer_id,
+                o.name AS officer_name,
+                i.score,
+                hg.grade,
+                i.remarks,
+                i.inspection_date
+            FROM inspections i
+            JOIN stalls s
+                ON i.stall_id = s.stall_id
+            JOIN nea_officers o
+                ON i.officer_id = o.officer_id
+            LEFT JOIN hygiene_grades hg
+                ON i.inspection_id = hg.inspection_id
+        `
         
         const request = await connection.request()
         request.input("id", id);

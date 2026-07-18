@@ -84,6 +84,7 @@
     <div class="tab" onclick="switchTab('grade')">Grade</div>
     <div class="tab" onclick="switchTab('account')">Account</div>
     <div class="tab" onclick="switchTab('other')">Other Features</div>
+    <div class="tab" id="operatorTab" style="display:none" onclick="switchTab('operator')">Operator Management</div>
   </div>
 
   <!-- ACCOUNT TAB -->
@@ -98,6 +99,7 @@
       <div class="row">
         <button onclick="register()">Register</button>
         <button onclick="login()" class="secondary">Login</button>
+        <button class="secondary" onclick="officerLogin()">Officer Login</button>
       </div>
       <div id="authStatus"></div>
     </div>
@@ -150,6 +152,17 @@
     <div class="card">
       <h2>Grade History</h2>
       <div id="gradeHistory"><div class="muted">Select a stall first.</div></div>
+    </div>
+  </div>
+
+  <!-- OPERATOR TAB -->
+  <div class="panel" id="panel-operator">
+    <div class="card">
+      <h2>Operator Management</h2>
+      <button onclick="loadInspectionHistory()">
+        View All Inspection History
+      </button>
+      <div id="inspectionHistory"></div>
     </div>
   </div>
 
@@ -431,6 +444,8 @@ const API = "http://localhost:3000";
 let token = localStorage.getItem("token") || null;
 let customerId = localStorage.getItem("customer_id") || null;
 let customerName = localStorage.getItem("customer_name") || null;
+let officer_token = localStorage.getItem("officer_token") || null;
+let officerName = localStorage.getItem("officer_name") || null;
 let selectedStallId = null;
 let selectedStallName = null;
 let gradeHistory = [];
@@ -685,11 +700,15 @@ Incoming orders will appear here.
 
 }
 function updateSessionUI() {
-  document.getElementById("sessionCard").style.display = token ? "block" : "none";
-  document.getElementById("authCard").style.display = token ? "none" : "block";
+  document.getElementById("sessionCard").style.display = (token || officer_token) ? "block" : "none";
+  document.getElementById("authCard").style.display = (token || officer_token) ? "none" : "block";
   if (token) {
     document.getElementById("sessionName").textContent = customerName;
     document.getElementById("sessionId").textContent = customerId;
+  }
+  else if (officer_token) {
+    document.getElementById("sessionName").textContent = officerName;
+    document.getElementById("sessionId").textContent = "Officer";
   }
 }
 
@@ -741,7 +760,19 @@ async function login() {
 
 function logout() {
   token = null; customerId = null; customerName = null;
-  localStorage.clear();
+  localStorage.removeItem("officer_token");
+  localStorage.removeItem("officer_name");
+
+  officer_token = null;
+
+  hideOperatorTab();
+  // localStorage.clear();
+  localStorage.removeItem("token");
+  localStorage.removeItem("customer_id");
+  localStorage.removeItem("customer_name");
+
+  localStorage.removeItem("officer_token");
+  localStorage.removeItem("officer_name");
   updateSessionUI();
 }
 
@@ -1050,7 +1081,7 @@ async function unlikeItem(itemId) {
   }
 }
 
-// ─── GRADES (Weiye) ──────────────────────────────────────────────────────────
+// ─── GRADES / OPERATOR (Weiye) ───────────────────────────────────────────────
 
 async function loadGrades(stallId) {
   const currentDisplay = document.getElementById("currentGradeDisplay");
@@ -1111,6 +1142,30 @@ async function loadGrades(stallId) {
   }
 }
 
+async function loadInspectionHistory(){
+  const res = await fetch(`${API}/inspection`);
+  if (!res.ok) {
+    document.getElementById("inspectionHistory").innerHTML = "Unable to load inspection history.";
+    return;
+  }
+  const inspections = await res.json();
+  inspections.sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date));
+  let html="";
+  inspections.forEach(i=>{
+    html += `
+      <div class="feedback-entry">
+        <b>Inspection #${i.inspection_id}</b>
+        <p><b>Stall:</b> ${i.stall_name ?? i.stall_id}</p>
+        <p><b>Officer:</b> ${i.officer_name ?? i.officer_id}</p>
+        <p><b>Score:</b> ${i.score}${i.grade ? ` (${i.grade})` : ""}</p>
+        <p><b>Remarks:</b> ${i.remarks || "None"}</p>
+        <p><b>Inspection Date:</b> ${new Date(i.inspection_date).toLocaleDateString()}</p>
+      </div>
+    `;
+  });
+  document.getElementById("inspectionHistory").innerHTML = html;
+}
+
 function gradeValue(grade) {
   switch (grade) { case "A": return 4; case "B": return 3; case "C": return 2; case "D": return 1; default: return 0; }
 }
@@ -1121,6 +1176,43 @@ function getTrend(current, last) {
   if (c > p) return "▲";
   if (c < p) return "▼";
   return "=";
+}
+
+async function officerLogin(){
+  try{
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const res = await fetch(`${API}/auth/officer/login`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email,password})
+      }
+    );
+    const data = await res.json();
+    if(res.ok) {
+      officer_token = data.token;
+      localStorage.setItem("officer_token",officer_token);
+      localStorage.setItem("officer_name",data.data.name);
+      officerName = data.data.name;
+      showOperatorTab();
+      updateSessionUI();
+      showStatus("authStatus","Officer login successful!",true);
+    }
+    else {
+        showStatus("authStatus",data.message,false);
+    }
+  }
+  catch(err){
+    showStatus("authStatus", err.message, false);
+  }
+}
+
+function showOperatorTab(){
+    document.getElementById("operatorTab").style.display="block";
+}
+
+function hideOperatorTab(){
+    document.getElementById("operatorTab").style.display="none";
 }
 
 // ─── ORDER MANAGEMENT (Yuzhen) ───────────────────────────────────────────────
@@ -1818,6 +1910,7 @@ function yzStartNewOrder() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 updateSessionUI();
 loadStalls();
+if(officer_token){showOperatorTab();}
 </script>
 </body>
 </html>
