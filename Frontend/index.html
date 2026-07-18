@@ -366,7 +366,7 @@
 
     <div>
       <label for="profileEmail">Email</label>
-      <input id="profileEmail" type="email" disabled>
+      <input id="profileEmail" type="email">
     </div>
   </div>
 
@@ -537,10 +537,13 @@ function closeCustomerProfile(){
 async function saveCustomerProfile(){
 
     const name =
-        document.getElementById("profileName").value;
+    document.getElementById("profileName").value.trim();
+
+    const email =
+    document.getElementById("profileEmail").value.trim();
 
     const phone =
-        document.getElementById("profilePhone").value;
+    document.getElementById("profilePhone").value.trim();
 
     try{
 
@@ -555,6 +558,7 @@ async function saveCustomerProfile(){
 
             body:JSON.stringify({
                 name,
+                email,
                 phone
             })
 
@@ -562,18 +566,27 @@ async function saveCustomerProfile(){
 
         const data = await res.json();
 
-        if(!res.ok){
+        if (!res.ok) {
+            console.log(data);   // See the full response in the browser console
+
+            if (data.details) {
+                throw new Error(data.details.join(", "));
+           }
+
             throw new Error(data.error);
         }
+
+        await loadCustomerProfile();
 
         showStatus(
             "profileStatus",
             "Profile updated successfully!",
             true
         );
+
         setTimeout(() => {
-    document.getElementById("profileStatus").innerHTML = "";
-}, 3000);
+            document.getElementById("profileStatus").innerHTML = "";
+        }, 3000);
 
     }
     catch(err){

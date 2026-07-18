@@ -1,9 +1,20 @@
+//ziying
 const Joi = require("joi");
 const profileCustModel = require("../models/profileCustModel");
 
 // Validation rules for editing profile
 const updateProfileSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(100).required(),
+  name: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .required(),
+
+  email: Joi.string()
+    .trim()
+    .email()
+    .max(255)
+    .required(),
 
   phone: Joi.string()
     .trim()
@@ -65,10 +76,23 @@ async function updateProfile(req, res) {
       });
     }
 
+    const customerWithEmail =
+      await profileCustModel.getCustomerByEmail(value.email);
+
+    if (
+      customerWithEmail &&
+      customerWithEmail.customer_id !== customerId
+    ) {
+      return res.status(409).json({
+        error: "Email address is already in use"
+      });
+    }
+
     const updatedCustomer =
       await profileCustModel.updateCustomerProfile(
         customerId,
         value.name,
+        value.email,
         value.phone
       );
 

@@ -22,28 +22,51 @@ async function getCustomerProfile(customerId) {
     return result.recordset[0];
 }
 
+async function getCustomerByEmail(email) {
+  const connection = await sql.connect(dbConfig);
+
+  const request = connection.request();
+  request.input("email", sql.NVarChar, email);
+
+  const result = await request.query(`
+    SELECT
+      customer_id,
+      name,
+      email,
+      phone,
+      created_at
+    FROM customers
+    WHERE email = @email
+  `);
+
+  return result.recordset[0];
+}
+
 // Update customer profile
-async function updateCustomerProfile(customerId, name, phone) {
-    const connection = await sql.connect(dbConfig);
+async function updateCustomerProfile(customerId, name, email, phone) {
+  const connection = await sql.connect(dbConfig);
 
-    const request = connection.request();
+  const request = connection.request();
 
-    request.input("customerId", sql.Int, customerId);
-    request.input("name", sql.NVarChar, name);
-    request.input("phone", sql.NVarChar, phone);
+  request.input("customerId", sql.Int, customerId);
+  request.input("name", sql.NVarChar, name);
+  request.input("email", sql.NVarChar, email);
+  request.input("phone", sql.NVarChar, phone);
 
-    await request.query(`
-        UPDATE customers
-        SET
-            name = @name,
-            phone = @phone
-        WHERE customer_id = @customerId
-    `);
+  await request.query(`
+    UPDATE customers
+    SET
+      name = @name,
+      email = @email,
+      phone = @phone
+    WHERE customer_id = @customerId
+  `);
 
-    return await getCustomerProfile(customerId);
+  return await getCustomerProfile(customerId);
 }
 
 module.exports = {
     getCustomerProfile,
+    getCustomerByEmail,
     updateCustomerProfile
 };
