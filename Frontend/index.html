@@ -308,50 +308,118 @@
   <div class="summary-grid">
 
     <div class="summary-box">
-      <h3 style="margin-top:0;">Customer Main Page</h3>
 
-      <div class="muted">
-        The shared customer page provides navigation to account, stalls,
-        menu items, feedback and ordering features.
-      </div>
+  <h3 style="margin-top:0;">👤 Customer Portal</h3>
 
-      <button
-        class="small secondary"
-        onclick="refreshCustomerFeatures()"
-        style="margin-top:8px;"
-      >
-        Open Customer Main Page
-      </button>
+  <p class="muted">
+    Welcome to your customer portal.
+    You can browse stalls, browse menus and manage your profile.
+  </p>
+
+  <div class="flow-actions">
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Stalls
+    </button>
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Menu
+    </button>
+
+    <button
+      class="small secondary"
+      onclick="loadCustomerProfile()">
+      My Profile
+    </button>
+
+  </div>
+
+</div>
+
+  </div>
+<!-----------------------------------ZIYING --------------------------->
+<div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
+  Customer authentication and catalog APIs are connected successfully.
+</div>
+
+</div>
+<!-- END OF ZIYING CUSTOMER FEATURES -->
+
+
+<!-- ZIYING CUSTOMER PROFILE -->
+<div class="card" id="customerProfileCard" style="display:none;">
+
+  <h2>
+    👤 My Profile
+    <span class="badge">Ziying</span>
+  </h2>
+
+  <div class="row">
+    <div>
+      <label for="profileName">Name</label>
+      <input id="profileName" type="text">
     </div>
 
+    <div>
+      <label for="profileEmail">Email</label>
+      <input id="profileEmail" type="email" disabled>
+    </div>
   </div>
 
-  <div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
-    Customer authentication and catalog APIs are connected successfully.
+  <div class="row">
+    <div>
+      <label for="profilePhone">Phone</label>
+      <input id="profilePhone" type="text" maxlength="8">
+    </div>
+
+    <div>
+      <label for="profileCreated">Member Since</label>
+      <input id="profileCreated" type="text" disabled>
+    </div>
   </div>
+
+  <div class="flow-actions">
+    <button onclick="saveCustomerProfile()">
+      Save Changes
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeCustomerProfile()"
+    >
+      Close
+    </button>
+  </div>
+
+  <div id="profileStatus"></div>
+
 </div>
+<!-- END OF ZIYING CUSTOMER PROFILE -->
+
+
+<!-- STALL OWNER FEATURES -->
 <div class="card">
 
-<h2>🏪 Stall Owner Management</h2>
+  <h2>🏪 Stall Owner Management</h2>
 
-<div class="row">
-<button onclick="loadProfile()">Load Profile</button>
-<button onclick="loadMenu()">Menu</button>
-<button onclick="loadPromotions()">Promotions</button>
-<button onclick="loadIncomingOrders()">Incoming Orders</button>
-</div>
+  <div class="row">
+    <button onclick="loadProfile()">Load Profile</button>
+    <button onclick="loadMenu()">Menu</button>
+    <button onclick="loadPromotions()">Promotions</button>
+    <button onclick="loadIncomingOrders()">Incoming Orders</button>
+  </div>
 
-<hr>
+  <hr>
 
-<div id="ownerContent">
-
-<p class="muted">
-
-Select one of the options above.
-
-</p>
-
-</div>
+  <div id="ownerContent">
+    <p class="muted">
+      Select one of the options above.
+    </p>
+  </div>
 
 </div>
   </div>
@@ -413,6 +481,111 @@ async function refreshCustomerFeatures() {
     status.textContent =
       "Customer main page opened and stalls refreshed successfully.";
   }
+}
+
+async function loadCustomerProfile() {
+
+  if (!token) {
+    alert("Please log in first.");
+    switchTab("account");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(`${API}/profile/customer`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error);
+    }
+
+    document.getElementById("customerProfileCard").style.display = "block";
+
+    document.getElementById("profileName").value =
+      data.customer.name;
+
+    document.getElementById("profileEmail").value =
+      data.customer.email;
+
+    document.getElementById("profilePhone").value =
+      data.customer.phone;
+
+    document.getElementById("profileCreated").value =
+      new Date(data.customer.created_at).toLocaleDateString();
+
+  }
+  catch(err){
+
+    alert(err.message);
+
+  }
+
+}
+
+function closeCustomerProfile(){
+
+    document.getElementById("customerProfileCard").style.display = "none";
+
+}
+
+async function saveCustomerProfile(){
+
+    const name =
+        document.getElementById("profileName").value;
+
+    const phone =
+        document.getElementById("profilePhone").value;
+
+    try{
+
+        const res = await fetch(`${API}/profile/customer`,{
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json",
+                Authorization:`Bearer ${token}`
+            },
+
+            body:JSON.stringify({
+                name,
+                phone
+            })
+
+        });
+
+        const data = await res.json();
+
+        if(!res.ok){
+            throw new Error(data.error);
+        }
+
+        showStatus(
+            "profileStatus",
+            "Profile updated successfully!",
+            true
+        );
+        setTimeout(() => {
+    document.getElementById("profileStatus").innerHTML = "";
+}, 3000);
+
+    }
+    catch(err){
+
+        showStatus(
+            "profileStatus",
+            err.message,
+            false
+        );
+
+    }
+
 }
 
 async function loadProfile(){
