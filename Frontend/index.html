@@ -178,8 +178,11 @@
 
         <div class="yz-actions">
           <button class="secondary" onclick="switchTab('browse')">Continue Shopping</button>
+          <button class="secondary" onclick="loadHistoryFromCart()">View Order History</button>
           <button id="yzCheckoutButton" onclick="yzCheckout(this)">Checkout</button>
         </div>
+
+        <div id="cartHistoryList" class="muted" style="margin-top:12px;"></div>
       </div>
 
       <!-- YUZHEN PAYMENT PAGE -->
@@ -305,50 +308,118 @@
   <div class="summary-grid">
 
     <div class="summary-box">
-      <h3 style="margin-top:0;">Customer Main Page</h3>
 
-      <div class="muted">
-        The shared customer page provides navigation to account, stalls,
-        menu items, feedback and ordering features.
-      </div>
+  <h3 style="margin-top:0;">👤 Customer Portal</h3>
 
-      <button
-        class="small secondary"
-        onclick="refreshCustomerFeatures()"
-        style="margin-top:8px;"
-      >
-        Open Customer Main Page
-      </button>
+  <p class="muted">
+    Welcome to your customer portal.
+    You can browse stalls, browse menus and manage your profile.
+  </p>
+
+  <div class="flow-actions">
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Stalls
+    </button>
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Menu
+    </button>
+
+    <button
+      class="small secondary"
+      onclick="loadCustomerProfile()">
+      My Profile
+    </button>
+
+  </div>
+
+</div>
+
+  </div>
+<!-----------------------------------ZIYING --------------------------->
+<div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
+  Customer authentication and catalog APIs are connected successfully.
+</div>
+
+</div>
+<!-- END OF ZIYING CUSTOMER FEATURES -->
+
+
+<!-- ZIYING CUSTOMER PROFILE -->
+<div class="card" id="customerProfileCard" style="display:none;">
+
+  <h2>
+    👤 My Profile
+    <span class="badge">Ziying</span>
+  </h2>
+
+  <div class="row">
+    <div>
+      <label for="profileName">Name</label>
+      <input id="profileName" type="text">
     </div>
 
+    <div>
+      <label for="profileEmail">Email</label>
+      <input id="profileEmail" type="email">
+    </div>
   </div>
 
-  <div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
-    Customer authentication and catalog APIs are connected successfully.
+  <div class="row">
+    <div>
+      <label for="profilePhone">Phone</label>
+      <input id="profilePhone" type="text" maxlength="8">
+    </div>
+
+    <div>
+      <label for="profileCreated">Member Since</label>
+      <input id="profileCreated" type="text" disabled>
+    </div>
   </div>
+
+  <div class="flow-actions">
+    <button onclick="saveCustomerProfile()">
+      Save Changes
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeCustomerProfile()"
+    >
+      Close
+    </button>
+  </div>
+
+  <div id="profileStatus"></div>
+
 </div>
+<!-- END OF ZIYING CUSTOMER PROFILE -->
+
+
+<!-- STALL OWNER FEATURES -->
 <div class="card">
 
-<h2>🏪 Stall Owner Management</h2>
+  <h2>🏪 Stall Owner Management</h2>
 
-<div class="row">
-<button onclick="loadProfile()">Load Profile</button>
-<button onclick="loadMenu()">Menu</button>
-<button onclick="loadPromotions()">Promotions</button>
-<button onclick="loadIncomingOrders()">Incoming Orders</button>
-</div>
+  <div class="row">
+    <button onclick="loadProfile()">Load Profile</button>
+    <button onclick="loadMenu()">Menu</button>
+    <button onclick="loadPromotions()">Promotions</button>
+    <button onclick="loadIncomingOrders()">Incoming Orders</button>
+  </div>
 
-<hr>
+  <hr>
 
-<div id="ownerContent">
-
-<p class="muted">
-
-Select one of the options above.
-
-</p>
-
-</div>
+  <div id="ownerContent">
+    <p class="muted">
+      Select one of the options above.
+    </p>
+  </div>
 
 </div>
   </div>
@@ -412,7 +483,124 @@ async function refreshCustomerFeatures() {
   }
 }
 
-//manage Stall profile
+async function loadCustomerProfile() {
+
+  if (!token) {
+    alert("Please log in first.");
+    switchTab("account");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(`${API}/profile/customer`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error);
+    }
+
+    document.getElementById("customerProfileCard").style.display = "block";
+
+    document.getElementById("profileName").value =
+      data.customer.name;
+
+    document.getElementById("profileEmail").value =
+      data.customer.email;
+
+    document.getElementById("profilePhone").value =
+      data.customer.phone;
+
+    document.getElementById("profileCreated").value =
+      new Date(data.customer.created_at).toLocaleDateString();
+
+  }
+  catch(err){
+
+    alert(err.message);
+
+  }
+
+}
+
+function closeCustomerProfile(){
+
+    document.getElementById("customerProfileCard").style.display = "none";
+
+}
+
+async function saveCustomerProfile(){
+
+    const name =
+    document.getElementById("profileName").value.trim();
+
+    const email =
+    document.getElementById("profileEmail").value.trim();
+
+    const phone =
+    document.getElementById("profilePhone").value.trim();
+
+    try{
+
+        const res = await fetch(`${API}/profile/customer`,{
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json",
+                Authorization:`Bearer ${token}`
+            },
+
+            body:JSON.stringify({
+                name,
+                email,
+                phone
+            })
+
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.log(data);   // See the full response in the browser console
+
+            if (data.details) {
+                throw new Error(data.details.join(", "));
+           }
+
+            throw new Error(data.error);
+        }
+
+        await loadCustomerProfile();
+
+        showStatus(
+            "profileStatus",
+            "Profile updated successfully!",
+            true
+        );
+
+        setTimeout(() => {
+            document.getElementById("profileStatus").innerHTML = "";
+        }, 3000);
+
+    }
+    catch(err){
+
+        showStatus(
+            "profileStatus",
+            err.message,
+            false
+        );
+
+    }
+
+}
+
 async function loadProfile(){
 
 document.getElementById("ownerContent").innerHTML=`
@@ -431,271 +619,25 @@ Load Profile
 
 }
 
-//Manage Menu Items
-async function loadMenu() {
+async function loadMenu(){
 
-document.getElementById("ownerContent").innerHTML = `
+document.getElementById("ownerContent").innerHTML=`
 
 <h3>Menu Management</h3>
 
-<div class="card">
+<button onclick="alert('Add Menu')">
 
-<div class="row">
-    <div>
-        <label>Item Name</label>
-        <input type="text" id="menuName" placeholder="Enter item name">
-    </div>
+Add Menu Item
 
-    <div>
-        <label>Price ($)</label>
-        <input type="number" id="menuPrice" step="0.01" placeholder="0.00">
-    </div>
-</div>
-
-<label>Description</label>
-<textarea
-    id="menuDescription"
-    placeholder="Enter description">
-</textarea>
-
-<label>Availability</label>
-
-<select id="menuAvailable">
-    <option value="true">Available</option>
-    <option value="false">Unavailable</option>
-</select>
-
-<br><br>
-
-<button onclick="saveMenuItem()">
-    ➕ Add Menu Item
 </button>
-
-<hr>
-
-<h3>Current Menu Items</h3>
-
-<div id="menuTable">
 
 <div class="placeholder">
 
-Loading menu items...
-
-</div>
-
-</div>
+Menu items will appear here.
 
 </div>
 
 `;
-
-loadOwnerMenu();
-
-}
-
-async function loadOwnerMenu() {
-
-    const stallId = 1;
-
-    const table = document.getElementById("menuTable");
-
-    try {
-
-        const res = await fetch(`${API}/menu/stall/${stallId}`);
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to load menu.");
-        }
-
-        const menuItems = data.data;
-
-        if (!menuItems || menuItems.length === 0) {
-            table.innerHTML = `
-                <div class="placeholder">
-                    No menu items found.
-                </div>
-            `;
-            return;
-        }
-
-        table.innerHTML = "";
-
-        menuItems.forEach(item => {
-
-            table.innerHTML += `
-                <div class="menu-item">
-
-                    <div>
-
-                        <strong>${item.item_name}</strong><br>
-
-                        <span class="muted">
-                            ${item.description || ""}
-                        </span><br>
-
-                        <span class="badge">
-                            $${Number(item.price).toFixed(2)}
-                        </span>
-
-                    </div>
-
-                    <div>
-
-                        <button
-                            class="small"
-                            onclick="editMenuItem(${item.item_id})">
-
-                            Edit
-
-                        </button>
-
-                        <button
-                            class="small secondary"
-                            onclick="deleteMenuItem(${item.item_id})">
-
-                            Delete
-
-                        </button>
-
-                    </div>
-
-                </div>
-            `;
-
-        });
-
-    } catch (err) {
-
-        table.innerHTML = `
-            <div class="status err">
-                ${err.message}
-            </div>
-        `;
-
-    }
-
-}
-
-async function deleteMenuItem(itemId) {
-
-    if (!confirm("Are you sure you want to delete this menu item?")) {
-        return;
-    }
-
-    try {
-
-        const res = await fetch(`${API}/menu/${itemId}`, {
-            method: "DELETE"
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to delete menu item.");
-        }
-
-        alert("Menu item deleted successfully.");
-
-        loadOwnerMenu();
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
-
-}
-
-async function editMenuItem(itemId) {
-
-    try {
-
-        const res = await fetch(`${API}/menu/${itemId}`);
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to load menu item.");
-        }
-
-        const item = data.data;
-
-        editingMenuId = itemId;
-
-        document.getElementById("menuName").value = item.item_name;
-        document.getElementById("menuPrice").value = item.price;
-        document.getElementById("menuDescription").value = item.description || "";
-        document.getElementById("menuAvailable").value = item.is_available ? "true" : "false";
-
-        document.querySelector("button[onclick='saveMenuItem()']").innerText = "💾 Update Menu Item";
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
-
-}
-
-async function saveMenuItem() {
-
-    const itemName = document.getElementById("menuName").value.trim();
-    const price = document.getElementById("menuPrice").value;
-    const description = document.getElementById("menuDescription").value.trim();
-    const isAvailable = document.getElementById("menuAvailable").value === "true";
-
-    if (!itemName || !price) {
-        alert("Please enter the item name and price.");
-        return;
-    }
-
-    try {
-
-        const url = editingMenuId
-          ? `${API}/menu/${editingMenuId}`
-          : `${API}/menu`;
-
-        const method = editingMenuId ? "PUT" : "POST";
-
-        const res = await fetch(url, {
-          method,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                stall_id: 1,
-                item_name: itemName,
-                description: description,
-                price: Number(price),
-                is_available: isAvailable,
-                image_url: null
-            })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to add menu item.");
-        }
-
-        alert("Menu item added successfully!");
-
-        document.getElementById("menuName").value = "";
-        document.getElementById("menuPrice").value = "";
-        document.getElementById("menuDescription").value = "";
-        document.getElementById("menuAvailable").value = "true";
-        editingMenuId = null;
-
-        document.querySelector("button[onclick='saveMenuItem()']").innerText =
-    "➕ Add Menu Item";
-        loadOwnerMenu();
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
 
 }
 
@@ -1720,6 +1662,84 @@ async function yzGetOrderStatus(orderId) {
   }
 }
 
+async function loadHistoryFromCart() {
+  if (!requireCustomer()) return;
+
+  const container = document.getElementById("cartHistoryList");
+  if (!container) return;
+
+  if (container.dataset.open === "true") {
+    container.innerHTML = "";
+    container.dataset.open = "false";
+    return;
+  }
+
+  container.dataset.open = "true";
+  container.innerHTML =
+    '<p class="muted">Loading order history...</p>';
+
+  try {
+    const res = await fetch(
+      `${API}/orders/history/${customerId}`
+    );
+
+    const orders = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        orders.error ||
+        orders.details ||
+        "Unable to load order history."
+      );
+    }
+
+    logApi(
+      "GET",
+      `/orders/history/${customerId}`,
+      null,
+      orders,
+      true
+    );
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      container.innerHTML =
+        '<p class="muted">No orders found.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="yz-summary">
+        <h3 style="margin-top:0;">Order History</h3>
+        ${orders.map(order => `
+          <div class="feedback-entry">
+            <b>Order #${order.order_id}</b>
+            <p style="margin:4px 0;">
+              Total: $${Number(order.total_price || 0).toFixed(2)}
+            </p>
+            <p style="margin:4px 0;">
+              Created: ${order.created_at
+                ? new Date(order.created_at).toLocaleString()
+                : "Not available"}
+            </p>
+            <span class="badge">${order.status || "Pending"}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML =
+      `<div class="status err">${err.message}</div>`;
+
+    logApi(
+      "GET",
+      `/orders/history/${customerId}`,
+      null,
+      { error: err.message },
+      false
+    );
+  }
+}
+
 async function loadHistory() {
   if (!requireCustomer()) return;
 
@@ -1783,6 +1803,12 @@ function yzStartNewOrder() {
   document.getElementById("paymentStatus").innerHTML = "";
   document.getElementById("checkoutStatus").innerHTML = "";
   document.getElementById("historyList").innerHTML = "";
+
+  const cartHistoryList = document.getElementById("cartHistoryList");
+  if (cartHistoryList) {
+    cartHistoryList.innerHTML = "";
+    cartHistoryList.dataset.open = "false";
+  }
 
   switchTab("browse");
   yzShowPage("cart");
