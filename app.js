@@ -10,6 +10,7 @@ const dbConfig = require("./dbConfig");
 
 // Route imports
 const authCustRouter = require("./routes/authCust");
+const authOfficerRouter = require("./routes/authOfficer");
 const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
@@ -35,6 +36,7 @@ app.use(express.static(path.join(__dirname, "Frontend")));
 
 // Routes
 app.use("/auth/customer", authCustRouter);
+app.use("/auth/officer", authOfficerRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/likes", likesRouter);
 app.use("/catalog", catalogRouter);

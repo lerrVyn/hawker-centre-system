@@ -59,6 +59,7 @@ function validateInspection(req, res, next) {
     }
     next();
 }
+
 function validateInspectionUpdate(req, res, next) {
     const { error } = updateInspectionSchema.validate(req.body, {abortEarly:false});
 

@@ -26,7 +26,7 @@ async function retrieveInspectionByID(id) {
         request.input("id", id);
         const result = await request.query(query);
         
-        return result.recordset[0];
+        return result.recordset[0] || null;
     }
     catch (error) {
         console.log(`Database error: ${error}`)
@@ -37,14 +37,14 @@ async function retrieveInspectionByID(id) {
 async function createInspection(inspectionInfo) {
     try {
         const connection = await poolPromise;
-        let remarks = inspectionInfo.remarks;
+        let remarks = inspectionInfo.remarks || "None";
         const query = `
             insert into inspections (stall_id, officer_id, score, remarks) values (@stall_id, @officer_id, @score, @remarks); 
             select scope_identity() as id;
             update stalls set hygiene_grade = @grade where stall_id = @stall_id;
         `;
 
-        if (!inspectionInfo.remarks) { remarks = "None"}
+        // if (!inspectionInfo.remarks) { remarks = "None"}
 
         const request = await connection.request()
         request.input("stall_id", inspectionInfo.stall_id);
