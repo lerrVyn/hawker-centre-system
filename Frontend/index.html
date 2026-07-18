@@ -58,6 +58,15 @@
   .yz-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
   .yz-complete-mark { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #166534; font-size: 32px; font-weight: 700; }
   .yz-summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-top: 12px; }
+  .yz-cart-item { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; background: white; }
+  .yz-cart-item-info h3 { margin: 0 0 6px; }
+  .yz-cart-item-info p { margin: 4px 0; }
+  .yz-cart-item-actions { text-align: right; }
+  .yz-cart-total-row { display: flex; justify-content: space-between; padding: 16px; margin-top: 12px; font-size: 18px; border-top: 2px solid #ddd; }
+  .yz-actions { display: flex; gap: 10px; margin-top: 16px; }
+  button.danger { background: #b42318; color: white; }
+  button.danger:hover { background: #912018; }
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -156,19 +165,24 @@
         <div id="yzProgressComplete" class="yz-progress-step">3. Complete</div>
       </div>
 
+      <!-- YUZHEN CART PAGE -->
       <div id="yzPageCart" class="yz-order-page active">
         <h2>Your Cart</h2>
-        <div id="cartList" class="muted">Your cart is empty.</div>
-        <div id="yzCartTotal" class="yz-cart-total"></div>
+
+        <div id="cartList">
+          <p class="muted">Your cart is empty.</p>
+        </div>
+
+        <div id="yzCartTotal"></div>
+        <div id="checkoutStatus"></div>
 
         <div class="yz-actions">
           <button class="secondary" onclick="switchTab('browse')">Continue Shopping</button>
-          <button onclick="yzCheckout()">Checkout</button>
+          <button id="yzCheckoutButton" onclick="yzCheckout(this)">Checkout</button>
         </div>
-
-        <div id="checkoutStatus"></div>
       </div>
 
+      <!-- YUZHEN PAYMENT PAGE -->
       <div id="yzPagePayment" class="yz-order-page">
         <h2>Payment</h2>
 
@@ -192,6 +206,7 @@
         <div id="paymentStatus"></div>
       </div>
 
+      <!-- YUZHEN COMPLETE PAGE -->
       <div id="yzPageComplete" class="yz-order-page">
         <div style="text-align:center;">
           <div class="yz-complete-mark">✓</div>
@@ -352,8 +367,17 @@ let gradeHistory = [];
 function switchTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add("active");
-  document.getElementById(`panel-${name}`).classList.add("active");
+
+  const tab = document.querySelector(`.tab[onclick="switchTab('${name}')"]`);
+  const panel = document.getElementById(`panel-${name}`);
+
+  if (!tab || !panel) {
+    console.error(`Missing tab or panel for: ${name}`);
+    return;
+  }
+
+  tab.classList.add("active");
+  panel.classList.add("active");
 }
 
 function showStatus(elId, message, ok) {
@@ -958,8 +982,16 @@ function yzShowPage(page) {
   const target = map[page];
   if (!target) return;
 
-  document.getElementById(target[0]).classList.add("active");
-  document.getElementById(target[1]).classList.add("active");
+  const pageElement = document.getElementById(target[0]);
+  const progressElement = document.getElementById(target[1]);
+
+  if (!pageElement || !progressElement) {
+    console.error(`Missing order page elements for: ${page}`);
+    return;
+  }
+
+  pageElement.classList.add("active");
+  progressElement.classList.add("active");
 }
 
 async function addToCart(itemId) {
@@ -998,54 +1030,148 @@ async function addToCart(itemId) {
   }
 }
 
+// =========================
+// LOAD CART
+// =========================
+
 async function loadCart() {
-  if (!requireCustomer()) return false;
+  if (!requireCustomer()) {
+    return false;
+  }
 
-  const container = document.getElementById("cartList");
-  const totalBox = document.getElementById("yzCartTotal");
+  const cartList =
+    document.getElementById("cartList");
 
-  container.innerHTML = '<p class="muted">Loading cart...</p>';
-  totalBox.textContent = "";
+  const cartTotal =
+    document.getElementById("yzCartTotal");
+
+  const checkoutButton =
+    document.getElementById("yzCheckoutButton");
+
+  cartList.innerHTML =
+    '<p class="muted">Loading cart...</p>';
+
+  cartTotal.textContent = "";
+
+  if (checkoutButton) {
+    checkoutButton.disabled = true;
+    checkoutButton.textContent = "Checkout";
+  }
 
   try {
-    const res = await fetch(`${API}/cart/${customerId}`);
-    const items = await res.json();
+    const res = await fetch(
+      `${API}/cart/${customerId}`
+    );
+
+    const data = await res.json();
 
     if (!res.ok) {
       throw new Error(
-        items.error || items.details || "Unable to load cart."
+        data.details ||
+        data.error ||
+        "Unable to load cart."
       );
     }
 
-    logApi("GET", `/cart/${customerId}`, null, items, true);
+    if (!Array.isArray(data) || data.length === 0) {
+      cartList.innerHTML =
+        '<p class="muted">Your cart is empty.</p>';
 
-    if (!Array.isArray(items) || items.length === 0) {
-      container.innerHTML = '<p class="muted">Your cart is empty.</p>';
+      cartTotal.textContent = "";
+
+      if (checkoutButton) {
+        checkoutButton.disabled = true;
+      }
+
       return false;
     }
 
-    yzCurrentOrderTotal = items.reduce(
-      (sum, item) => sum + Number(item.subtotal || 0),
-      0
+    let total = 0;
+
+    cartList.innerHTML = data.map(item => {
+      const itemPrice = Number(item.price);
+      const subtotal = Number(item.subtotal);
+
+      total += subtotal;
+
+      return `
+        <div class="yz-cart-item">
+
+          <div class="yz-cart-item-info">
+            <h3>${item.item_name}</h3>
+
+            <p class="muted">
+              ${item.stall_name || "Unknown Stall"}
+            </p>
+
+            <p>
+              $${itemPrice.toFixed(2)}
+              ×
+              ${item.quantity}
+            </p>
+          </div>
+
+          <div class="yz-cart-item-actions">
+
+            <p>
+              <strong>
+                $${subtotal.toFixed(2)}
+              </strong>
+            </p>
+
+            <button
+              class="danger"
+              onclick="removeCartItem(
+                ${item.cart_item_id},
+                this
+              )">
+              Remove
+            </button>
+
+          </div>
+
+        </div>
+      `;
+    }).join("");
+
+    cartTotal.innerHTML = `
+      <div class="yz-cart-total-row">
+        <strong>Total</strong>
+
+        <strong>
+          $${total.toFixed(2)}
+        </strong>
+      </div>
+    `;
+
+    if (checkoutButton) {
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = "Checkout";
+    }
+
+    logApi(
+      "GET",
+      `/cart/${customerId}`,
+      null,
+      data,
+      true
     );
 
-    container.innerHTML = items.map(item => `
-      <div class="yz-cart-row">
-        <div>
-          <b>${item.item_name}</b>
-          <div class="muted">
-            $${Number(item.price).toFixed(2)} × ${item.quantity}
-          </div>
-        </div>
-        <b>$${Number(item.subtotal).toFixed(2)}</b>
-      </div>
-    `).join("");
-
-    totalBox.textContent =
-      `Total: $${yzCurrentOrderTotal.toFixed(2)}`;
-
     return true;
+
   } catch (err) {
+    cartList.innerHTML = `
+      <div class="status err">
+        ${err.message}
+      </div>
+    `;
+
+    cartTotal.textContent = "";
+
+    if (checkoutButton) {
+      checkoutButton.disabled = true;
+    }
+
     logApi(
       "GET",
       `/cart/${customerId}`,
@@ -1054,88 +1180,134 @@ async function loadCart() {
       false
     );
 
-    container.innerHTML =
-      `<div class="status err">${err.message}</div>`;
-
     return false;
   }
 }
 
-async function yzCheckout() {
-  if (!requireCustomer()) return;
+// =========================
+// CHECKOUT
+// =========================
 
-  const hasItems = await loadCart();
-
-  if (!hasItems) {
-    showStatus(
-      "checkoutStatus",
-      "Add at least one item before checkout.",
-      false
-    );
+async function yzCheckout(button) {
+  if (!requireCustomer()) {
     return;
   }
 
-  const stallId = Number(selectedStallId);
-
-  if (!stallId) {
-    showStatus(
-      "checkoutStatus",
-      "Select the stall in Browse Stalls before checkout.",
-      false
-    );
-    return;
-  }
+  button.disabled = true;
+  button.textContent = "Creating order...";
 
   const payload = {
     customerId: Number(customerId)
   };
 
-  const res = await fetch(`${API}/orders/checkout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-});
-
   try {
-    const res = await fetch(`${API}/orders/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-      customerId: Number(customerId)
-    })
-    });
+    const res = await fetch(
+      `${API}/orders/checkout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
 
     const data = await res.json();
 
     if (!res.ok) {
       throw new Error(
-        data.details || data.error || "Checkout failed."
+        data.details ||
+        data.error ||
+        "Checkout failed."
       );
     }
 
-    yzCurrentOrderId = Number(data.orderId);
-    yzCurrentOrderTotal = Number(data.totalPrice);
+    yzCurrentOrderId =
+      Number(data.orderId);
 
-    localStorage.setItem("latestOrderId", yzCurrentOrderId);
-    localStorage.setItem("latestOrderTotal", yzCurrentOrderTotal);
+    yzCurrentOrderTotal =
+      Number(data.totalPrice);
 
-    document.getElementById("paymentOrderId").value =
-      yzCurrentOrderId;
+    localStorage.setItem(
+      "latestOrderId",
+      String(yzCurrentOrderId)
+    );
 
-    document.getElementById("statusOrderId").value =
-      yzCurrentOrderId;
+    localStorage.setItem(
+      "latestOrderTotal",
+      String(yzCurrentOrderTotal)
+    );
 
-    document.getElementById("yzPaymentOrderNumber").textContent =
-      yzCurrentOrderId;
+    const paymentOrderElement =
+      document.getElementById(
+        "yzPaymentOrderNumber"
+      );
 
-    document.getElementById("yzPaymentTotal").textContent =
-      `$${yzCurrentOrderTotal.toFixed(2)}`;
+    if (paymentOrderElement) {
+      paymentOrderElement.textContent =
+        yzCurrentOrderId;
+    }
 
-    logApi("POST", "/orders/checkout", payload, data, true);
+    const paymentTotalElement =
+      document.getElementById(
+        "yzPaymentTotal"
+      );
+
+    if (paymentTotalElement) {
+      paymentTotalElement.textContent =
+        `$${yzCurrentOrderTotal.toFixed(2)}`;
+    }
+
+    const paymentOrderInput =
+      document.getElementById(
+        "paymentOrderId"
+      );
+
+    if (paymentOrderInput) {
+      paymentOrderInput.value =
+        yzCurrentOrderId;
+    }
+
+    const statusOrderInput =
+      document.getElementById(
+        "statusOrderId"
+      );
+
+    if (statusOrderInput) {
+      statusOrderInput.value =
+        yzCurrentOrderId;
+    }
+
+    document.getElementById(
+      "cartList"
+    ).innerHTML =
+      '<p class="muted">Your cart is empty.</p>';
+
+    document.getElementById(
+      "yzCartTotal"
+    ).textContent = "";
+
+    document.getElementById(
+      "checkoutStatus"
+    ).innerHTML = "";
+
+    logApi(
+      "POST",
+      "/orders/checkout",
+      payload,
+      data,
+      true
+    );
+
     yzShowPage("payment");
+
   } catch (err) {
+    showStatus(
+      "checkoutStatus",
+      err.message,
+      false
+    );
+
     logApi(
       "POST",
       "/orders/checkout",
@@ -1144,7 +1316,71 @@ async function yzCheckout() {
       false
     );
 
-    showStatus("checkoutStatus", err.message, false);
+    button.disabled = false;
+    button.textContent = "Checkout";
+  }
+}
+
+// =========================
+// REMOVE CART ITEM
+// =========================
+
+async function removeCartItem(
+  cartItemId,
+  button
+) {
+  const confirmed = confirm(
+    "Remove this item from your cart?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Removing...";
+
+  try {
+    const res = await fetch(
+      `${API}/cart/${cartItemId}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.details ||
+        data.error ||
+        "Unable to remove item."
+      );
+    }
+
+    logApi(
+      "DELETE",
+      `/cart/${cartItemId}`,
+      null,
+      data,
+      true
+    );
+
+    await loadCart();
+
+  } catch (err) {
+    alert(err.message);
+
+    button.disabled = false;
+    button.textContent = "Remove";
+
+    logApi(
+      "DELETE",
+      `/cart/${cartItemId}`,
+      null,
+      { error: err.message },
+      false
+    );
   }
 }
 
