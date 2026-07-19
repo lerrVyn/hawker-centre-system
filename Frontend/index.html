@@ -159,10 +159,19 @@
   <div class="panel" id="panel-operator">
     <div class="card">
       <h2>Operator Management</h2>
-      <button onclick="loadInspectionHistory()">
-        View All Inspection History
-      </button>
-      <div id="inspectionHistory"></div>
+      <button onclick="toggleInspectionHistory(); loadInspectionStalls();"> Inspection History</button>
+      <button onclick="toggleAddInspection()">Add Inspection</button>
+      <div id="inspectionHistory" style="display:none;"></div>
+      <div id="addInspectionPanel" style="display:none; margin-top:15px;">
+        <h3>Add Inspection</h3>
+        <select id="inspectionStall"><option value="">-- Select a stall --</option></select>
+        <input id="inspectionScore" type="number" placeholder="Score (0-100)" min="0" max="100" step="1" required>
+        <textarea
+          id="inspectionRemarks"
+          placeholder="Remarks"></textarea>
+        <button onclick="submitInspection()">Submit Inspection</button>
+        <div id="inspectionStatus"></div>
+      </div>
     </div>
   </div>
 
@@ -446,6 +455,7 @@ let customerId = localStorage.getItem("customer_id") || null;
 let customerName = localStorage.getItem("customer_name") || null;
 let officer_token = localStorage.getItem("officer_token") || null;
 let officerName = localStorage.getItem("officer_name") || null;
+let officerId = localStorage.getItem("officer_id") || null;
 let selectedStallId = null;
 let selectedStallName = null;
 let gradeHistory = [];
@@ -762,17 +772,17 @@ function logout() {
   token = null; customerId = null; customerName = null;
   localStorage.removeItem("officer_token");
   localStorage.removeItem("officer_name");
+  localStorage.removeItem("officer_id");
 
   officer_token = null;
+  officerName = null;
+  officerId = null;
 
   hideOperatorTab();
   // localStorage.clear();
   localStorage.removeItem("token");
   localStorage.removeItem("customer_id");
   localStorage.removeItem("customer_name");
-
-  localStorage.removeItem("officer_token");
-  localStorage.removeItem("officer_name");
   updateSessionUI();
 }
 
@@ -1100,8 +1110,11 @@ async function loadGrades(stallId) {
     gradeHistory = grades.filter(g => {
       const inspection = inspectionMap[g.inspection_id];
       return inspection && inspection.stall_id == stallId;
-    });
-    gradeHistory.sort((a, b) => new Date(b.issued_date) - new Date(a.issued_date));
+    }).map(g => ({
+      ...g,
+      inspection_date: inspectionMap[g.inspection_id].inspection_date
+    }));
+    gradeHistory.sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date));
 
     if (gradeHistory.length === 0) {
       currentDisplay.innerHTML = '<div class="placeholder">No hygiene grades yet.</div>';
@@ -1142,16 +1155,20 @@ async function loadGrades(stallId) {
   }
 }
 
-async function loadInspectionHistory(){
+async function loadInspectionHistory() {
   const res = await fetch(`${API}/inspection`);
   if (!res.ok) {
     document.getElementById("inspectionHistory").innerHTML = "Unable to load inspection history.";
     return;
   }
+
   const inspections = await res.json();
+
   inspections.sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date));
-  let html="";
-  inspections.forEach(i=>{
+
+  let html = "";
+
+  inspections.forEach(i => {
     html += `
       <div class="feedback-entry">
         <b>Inspection #${i.inspection_id}</b>
@@ -1163,7 +1180,116 @@ async function loadInspectionHistory(){
       </div>
     `;
   });
+
   document.getElementById("inspectionHistory").innerHTML = html;
+}
+
+function toggleInspectionHistory() {
+  const history = document.getElementById("inspectionHistory");
+  const panel = document.getElementById("addInspectionPanel");
+  panel.style.display = "none";
+  if (history.style.display === "none") {
+    history.style.display = "block";
+    loadInspectionHistory();
+  } else {
+    history.style.display = "none";
+  }
+}
+
+function toggleAddInspection() {
+  const history = document.getElementById("inspectionHistory");
+  const panel = document.getElementById("addInspectionPanel");
+  history.style.display = "none";
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+    loadInspectionStalls();
+  }
+  else {
+    panel.style.display = "none";
+  }
+}
+
+async function loadInspectionStalls() {
+  const res = await fetch(`${API}/catalog/stalls`);
+  if (!res.ok) {return;}
+  const stalls = await res.json();
+  const select = document.getElementById("inspectionStall");
+  select.innerHTML ='<option value="">-- Select a stall --</option>';
+  stalls.forEach(stall => {
+    select.innerHTML += `
+      <option value="${stall.stall_id}">
+        ${stall.stall_name}
+      </option>
+    `;
+  });
+}
+
+async function submitInspection() {
+  const scoreInput = document.getElementById("inspectionScore");
+  const score = Number(scoreInput.value);
+  if (
+      scoreInput.value.trim() === "" ||
+      !Number.isInteger(score) ||
+      score < 0 ||
+      score > 100
+  ) {
+      showStatus(
+          "inspectionStatus",
+          "Score must be an integer from 0 to 100.",
+          false
+      );
+      return;
+  }
+  document.getElementById("inspectionStatus").innerHTML = "";
+  const stall_id = document.getElementById("inspectionStall").value;
+  const remarks = document.getElementById("inspectionRemarks").value;
+  try {
+    const res = await fetch(`${API}/inspection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${officer_token}`
+      },
+      body: JSON.stringify({
+        stall_id: Number(stall_id),
+        officer_id: Number(officerId),
+        score: score,
+        remarks
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const errorMsg =
+        data.message ||
+        data.error ||
+        (Array.isArray(data.details)
+          ? data.details.join(", ")
+          : null) ||
+        "Unable to create inspection.";
+
+      showStatus("inspectionStatus", errorMsg, false);
+      return;
+    }
+    showStatus(
+      "inspectionStatus",
+      "Inspection created successfully!",
+      true
+    );
+    document.getElementById("inspectionRemarks").value = "";
+    document.getElementById("inspectionScore").value = "";
+    document.getElementById("addInspectionPanel").style.display = "none";
+    document.getElementById("inspectionHistory").style.display = "block";
+    loadInspectionHistory();
+    if (selectedStallId) {
+        await loadGrades(selectedStallId);
+    }
+  } catch (err) {
+    showStatus(
+      "inspectionStatus",
+      "Network error: " + err.message,
+      false
+    );
+  }
 }
 
 function gradeValue(grade) {
@@ -1191,9 +1317,13 @@ async function officerLogin(){
     const data = await res.json();
     if(res.ok) {
       officer_token = data.token;
-      localStorage.setItem("officer_token",officer_token);
-      localStorage.setItem("officer_name",data.data.name);
       officerName = data.data.name;
+      officerId = data.data.officer_id;
+
+      localStorage.setItem("officer_token", officer_token);
+      localStorage.setItem("officer_name", officerName);
+      localStorage.setItem("officer_id", officerId);
+
       showOperatorTab();
       updateSessionUI();
       showStatus("authStatus","Officer login successful!",true);

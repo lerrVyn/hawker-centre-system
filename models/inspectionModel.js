@@ -56,6 +56,7 @@ async function retrieveInspectionByID(id) {
                 ON i.officer_id = o.officer_id
             LEFT JOIN hygiene_grades hg
                 ON i.inspection_id = hg.inspection_id
+            WHERE i.inspection_id = @id;
         `
         
         const request = await connection.request()
