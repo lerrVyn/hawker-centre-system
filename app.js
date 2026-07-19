@@ -10,15 +10,19 @@ const dbConfig = require("./dbConfig");
 
 // Route imports
 const authCustRouter = require("./routes/authCust");
+const authOfficerRouter = require("./routes/authOfficer");
 const feedbackRouter = require("./routes/feedback");
 const likesRouter = require("./routes/likes");
 const catalogRouter = require("./routes/catalog");
+const gradeRouter = require("./routes/grade");
 const inspectionRouter = require("./routes/inspection");
+const officerRouter = require("./routes/neaOfficer");
 const cartRouter = require("./routes/cart");
 const ordersRouter = require("./routes/orders");
 const paymentRouter = require("./routes/payment");
 const catalogCustRouter = require("./routes/catalogCust");
 const menuRouter = require("./routes/menu");
+const profileCustRoutes = require("./routes/profileCust");
 
 
 const app = express();
@@ -34,15 +38,19 @@ app.use(express.static(path.join(__dirname, "Frontend")));
 
 // Routes
 app.use("/auth/customer", authCustRouter);
+app.use("/auth/officer", authOfficerRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/likes", likesRouter);
 app.use("/catalog", catalogRouter);
+app.use("/grade", gradeRouter);
 app.use("/inspection", inspectionRouter);
+app.use("/officer", officerRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/payment", paymentRouter);
 app.use("/catalog/customer", catalogCustRouter);
 app.use("/menu", menuRouter);
+app.use("/profile/customer", profileCustRoutes);
 
 // Basic API test route
 app.get("/api", (req, res) => {

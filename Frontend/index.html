@@ -58,6 +58,15 @@
   .yz-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
   .yz-complete-mark { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #166534; font-size: 32px; font-weight: 700; }
   .yz-summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-top: 12px; }
+  .yz-cart-item { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; background: white; }
+  .yz-cart-item-info h3 { margin: 0 0 6px; }
+  .yz-cart-item-info p { margin: 4px 0; }
+  .yz-cart-item-actions { text-align: right; }
+  .yz-cart-total-row { display: flex; justify-content: space-between; padding: 16px; margin-top: 12px; font-size: 18px; border-top: 2px solid #ddd; }
+  .yz-actions { display: flex; gap: 10px; margin-top: 16px; }
+  button.danger { background: #b42318; color: white; }
+  button.danger:hover { background: #912018; }
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -75,6 +84,7 @@
     <div class="tab" onclick="switchTab('grade')">Grade</div>
     <div class="tab" onclick="switchTab('account')">Account</div>
     <div class="tab" onclick="switchTab('other')">Other Features</div>
+    <div class="tab" id="operatorTab" style="display:none" onclick="switchTab('operator')">Operator Management</div>
   </div>
 
   <!-- ACCOUNT TAB -->
@@ -89,6 +99,7 @@
       <div class="row">
         <button onclick="register()">Register</button>
         <button onclick="login()" class="secondary">Login</button>
+        <button class="secondary" onclick="officerLogin()">Officer Login</button>
       </div>
       <div id="authStatus"></div>
     </div>
@@ -144,6 +155,17 @@
     </div>
   </div>
 
+  <!-- OPERATOR TAB -->
+  <div class="panel" id="panel-operator">
+    <div class="card">
+      <h2>Operator Management</h2>
+      <button onclick="loadInspectionHistory()">
+        View All Inspection History
+      </button>
+      <div id="inspectionHistory"></div>
+    </div>
+  </div>
+
   <!-- OTHER FEATURES TAB -->
   <div class="panel" id="panel-other">
 
@@ -156,19 +178,27 @@
         <div id="yzProgressComplete" class="yz-progress-step">3. Complete</div>
       </div>
 
+      <!-- YUZHEN CART PAGE -->
       <div id="yzPageCart" class="yz-order-page active">
         <h2>Your Cart</h2>
-        <div id="cartList" class="muted">Your cart is empty.</div>
-        <div id="yzCartTotal" class="yz-cart-total"></div>
+
+        <div id="cartList">
+          <p class="muted">Your cart is empty.</p>
+        </div>
+
+        <div id="yzCartTotal"></div>
+        <div id="checkoutStatus"></div>
 
         <div class="yz-actions">
           <button class="secondary" onclick="switchTab('browse')">Continue Shopping</button>
-          <button onclick="yzCheckout()">Checkout</button>
+          <button class="secondary" onclick="loadHistoryFromCart()">View Order History</button>
+          <button id="yzCheckoutButton" onclick="yzCheckout(this)">Checkout</button>
         </div>
 
-        <div id="checkoutStatus"></div>
+        <div id="cartHistoryList" class="muted" style="margin-top:12px;"></div>
       </div>
 
+      <!-- YUZHEN PAYMENT PAGE -->
       <div id="yzPagePayment" class="yz-order-page">
         <h2>Payment</h2>
 
@@ -192,6 +222,7 @@
         <div id="paymentStatus"></div>
       </div>
 
+      <!-- YUZHEN COMPLETE PAGE -->
       <div id="yzPageComplete" class="yz-order-page">
         <div style="text-align:center;">
           <div class="yz-complete-mark">✓</div>
@@ -290,50 +321,118 @@
   <div class="summary-grid">
 
     <div class="summary-box">
-      <h3 style="margin-top:0;">Customer Main Page</h3>
 
-      <div class="muted">
-        The shared customer page provides navigation to account, stalls,
-        menu items, feedback and ordering features.
-      </div>
+  <h3 style="margin-top:0;">👤 Customer Portal</h3>
 
-      <button
-        class="small secondary"
-        onclick="refreshCustomerFeatures()"
-        style="margin-top:8px;"
-      >
-        Open Customer Main Page
-      </button>
+  <p class="muted">
+    Welcome to your customer portal.
+    You can browse stalls, browse menus and manage your profile.
+  </p>
+
+  <div class="flow-actions">
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Stalls
+    </button>
+
+    <button
+      class="small"
+      onclick="openCustomerBrowse()">
+      Browse Menu
+    </button>
+
+    <button
+      class="small secondary"
+      onclick="loadCustomerProfile()">
+      My Profile
+    </button>
+
+  </div>
+
+</div>
+
+  </div>
+<!-----------------------------------ZIYING --------------------------->
+<div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
+  Customer authentication and catalog APIs are connected successfully.
+</div>
+
+</div>
+<!-- END OF ZIYING CUSTOMER FEATURES -->
+
+
+<!-- ZIYING CUSTOMER PROFILE -->
+<div class="card" id="customerProfileCard" style="display:none;">
+
+  <h2>
+    👤 My Profile
+    <span class="badge">Ziying</span>
+  </h2>
+
+  <div class="row">
+    <div>
+      <label for="profileName">Name</label>
+      <input id="profileName" type="text">
     </div>
 
+    <div>
+      <label for="profileEmail">Email</label>
+      <input id="profileEmail" type="email">
+    </div>
   </div>
 
-  <div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
-    Customer authentication and catalog APIs are connected successfully.
+  <div class="row">
+    <div>
+      <label for="profilePhone">Phone</label>
+      <input id="profilePhone" type="text" maxlength="8">
+    </div>
+
+    <div>
+      <label for="profileCreated">Member Since</label>
+      <input id="profileCreated" type="text" disabled>
+    </div>
   </div>
+
+  <div class="flow-actions">
+    <button onclick="saveCustomerProfile()">
+      Save Changes
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeCustomerProfile()"
+    >
+      Close
+    </button>
+  </div>
+
+  <div id="profileStatus"></div>
+
 </div>
+<!-- END OF ZIYING CUSTOMER PROFILE -->
+
+
+<!-- STALL OWNER FEATURES -->
 <div class="card">
 
-<h2>🏪 Stall Owner Management</h2>
+  <h2>🏪 Stall Owner Management</h2>
 
-<div class="row">
-<button onclick="loadProfile()">Load Profile</button>
-<button onclick="loadMenu()">Menu</button>
-<button onclick="loadPromotions()">Promotions</button>
-<button onclick="loadIncomingOrders()">Incoming Orders</button>
-</div>
+  <div class="row">
+    <button onclick="loadProfile()">Load Profile</button>
+    <button onclick="loadMenu()">Menu</button>
+    <button onclick="loadPromotions()">Promotions</button>
+    <button onclick="loadIncomingOrders()">Incoming Orders</button>
+  </div>
 
-<hr>
+  <hr>
 
-<div id="ownerContent">
-
-<p class="muted">
-
-Select one of the options above.
-
-</p>
-
-</div>
+  <div id="ownerContent">
+    <p class="muted">
+      Select one of the options above.
+    </p>
+  </div>
 
 </div>
   </div>
@@ -345,6 +444,8 @@ const API = "http://localhost:3000";
 let token = localStorage.getItem("token") || null;
 let customerId = localStorage.getItem("customer_id") || null;
 let customerName = localStorage.getItem("customer_name") || null;
+let officer_token = localStorage.getItem("officer_token") || null;
+let officerName = localStorage.getItem("officer_name") || null;
 let selectedStallId = null;
 let selectedStallName = null;
 let gradeHistory = [];
@@ -352,8 +453,17 @@ let gradeHistory = [];
 function switchTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add("active");
-  document.getElementById(`panel-${name}`).classList.add("active");
+
+  const tab = document.querySelector(`.tab[onclick="switchTab('${name}')"]`);
+  const panel = document.getElementById(`panel-${name}`);
+
+  if (!tab || !panel) {
+    console.error(`Missing tab or panel for: ${name}`);
+    return;
+  }
+
+  tab.classList.add("active");
+  panel.classList.add("active");
 }
 
 function showStatus(elId, message, ok) {
@@ -386,6 +496,124 @@ async function refreshCustomerFeatures() {
     status.textContent =
       "Customer main page opened and stalls refreshed successfully.";
   }
+}
+
+async function loadCustomerProfile() {
+
+  if (!token) {
+    alert("Please log in first.");
+    switchTab("account");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(`${API}/profile/customer`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error);
+    }
+
+    document.getElementById("customerProfileCard").style.display = "block";
+
+    document.getElementById("profileName").value =
+      data.customer.name;
+
+    document.getElementById("profileEmail").value =
+      data.customer.email;
+
+    document.getElementById("profilePhone").value =
+      data.customer.phone;
+
+    document.getElementById("profileCreated").value =
+      new Date(data.customer.created_at).toLocaleDateString();
+
+  }
+  catch(err){
+
+    alert(err.message);
+
+  }
+
+}
+
+function closeCustomerProfile(){
+
+    document.getElementById("customerProfileCard").style.display = "none";
+
+}
+
+async function saveCustomerProfile(){
+
+    const name =
+    document.getElementById("profileName").value.trim();
+
+    const email =
+    document.getElementById("profileEmail").value.trim();
+
+    const phone =
+    document.getElementById("profilePhone").value.trim();
+
+    try{
+
+        const res = await fetch(`${API}/profile/customer`,{
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json",
+                Authorization:`Bearer ${token}`
+            },
+
+            body:JSON.stringify({
+                name,
+                email,
+                phone
+            })
+
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.log(data);   // See the full response in the browser console
+
+            if (data.details) {
+                throw new Error(data.details.join(", "));
+           }
+
+            throw new Error(data.error);
+        }
+
+        await loadCustomerProfile();
+
+        showStatus(
+            "profileStatus",
+            "Profile updated successfully!",
+            true
+        );
+
+        setTimeout(() => {
+            document.getElementById("profileStatus").innerHTML = "";
+        }, 3000);
+
+    }
+    catch(err){
+
+        showStatus(
+            "profileStatus",
+            err.message,
+            false
+        );
+
+    }
+
 }
 
 async function loadProfile(){
@@ -472,11 +700,15 @@ Incoming orders will appear here.
 
 }
 function updateSessionUI() {
-  document.getElementById("sessionCard").style.display = token ? "block" : "none";
-  document.getElementById("authCard").style.display = token ? "none" : "block";
+  document.getElementById("sessionCard").style.display = (token || officer_token) ? "block" : "none";
+  document.getElementById("authCard").style.display = (token || officer_token) ? "none" : "block";
   if (token) {
     document.getElementById("sessionName").textContent = customerName;
     document.getElementById("sessionId").textContent = customerId;
+  }
+  else if (officer_token) {
+    document.getElementById("sessionName").textContent = officerName;
+    document.getElementById("sessionId").textContent = "Officer";
   }
 }
 
@@ -528,7 +760,19 @@ async function login() {
 
 function logout() {
   token = null; customerId = null; customerName = null;
-  localStorage.clear();
+  localStorage.removeItem("officer_token");
+  localStorage.removeItem("officer_name");
+
+  officer_token = null;
+
+  hideOperatorTab();
+  // localStorage.clear();
+  localStorage.removeItem("token");
+  localStorage.removeItem("customer_id");
+  localStorage.removeItem("customer_name");
+
+  localStorage.removeItem("officer_token");
+  localStorage.removeItem("officer_name");
   updateSessionUI();
 }
 
@@ -837,7 +1081,7 @@ async function unlikeItem(itemId) {
   }
 }
 
-// ─── GRADES (Weiye) ──────────────────────────────────────────────────────────
+// ─── GRADES / OPERATOR (Weiye) ───────────────────────────────────────────────
 
 async function loadGrades(stallId) {
   const currentDisplay = document.getElementById("currentGradeDisplay");
@@ -898,6 +1142,30 @@ async function loadGrades(stallId) {
   }
 }
 
+async function loadInspectionHistory(){
+  const res = await fetch(`${API}/inspection`);
+  if (!res.ok) {
+    document.getElementById("inspectionHistory").innerHTML = "Unable to load inspection history.";
+    return;
+  }
+  const inspections = await res.json();
+  inspections.sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date));
+  let html="";
+  inspections.forEach(i=>{
+    html += `
+      <div class="feedback-entry">
+        <b>Inspection #${i.inspection_id}</b>
+        <p><b>Stall:</b> ${i.stall_name ?? i.stall_id}</p>
+        <p><b>Officer:</b> ${i.officer_name ?? i.officer_id}</p>
+        <p><b>Score:</b> ${i.score}${i.grade ? ` (${i.grade})` : ""}</p>
+        <p><b>Remarks:</b> ${i.remarks || "None"}</p>
+        <p><b>Inspection Date:</b> ${new Date(i.inspection_date).toLocaleDateString()}</p>
+      </div>
+    `;
+  });
+  document.getElementById("inspectionHistory").innerHTML = html;
+}
+
 function gradeValue(grade) {
   switch (grade) { case "A": return 4; case "B": return 3; case "C": return 2; case "D": return 1; default: return 0; }
 }
@@ -908,6 +1176,43 @@ function getTrend(current, last) {
   if (c > p) return "▲";
   if (c < p) return "▼";
   return "=";
+}
+
+async function officerLogin(){
+  try{
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const res = await fetch(`${API}/auth/officer/login`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email,password})
+      }
+    );
+    const data = await res.json();
+    if(res.ok) {
+      officer_token = data.token;
+      localStorage.setItem("officer_token",officer_token);
+      localStorage.setItem("officer_name",data.data.name);
+      officerName = data.data.name;
+      showOperatorTab();
+      updateSessionUI();
+      showStatus("authStatus","Officer login successful!",true);
+    }
+    else {
+        showStatus("authStatus",data.message,false);
+    }
+  }
+  catch(err){
+    showStatus("authStatus", err.message, false);
+  }
+}
+
+function showOperatorTab(){
+    document.getElementById("operatorTab").style.display="block";
+}
+
+function hideOperatorTab(){
+    document.getElementById("operatorTab").style.display="none";
 }
 
 // ─── ORDER MANAGEMENT (Yuzhen) ───────────────────────────────────────────────
@@ -958,8 +1263,16 @@ function yzShowPage(page) {
   const target = map[page];
   if (!target) return;
 
-  document.getElementById(target[0]).classList.add("active");
-  document.getElementById(target[1]).classList.add("active");
+  const pageElement = document.getElementById(target[0]);
+  const progressElement = document.getElementById(target[1]);
+
+  if (!pageElement || !progressElement) {
+    console.error(`Missing order page elements for: ${page}`);
+    return;
+  }
+
+  pageElement.classList.add("active");
+  progressElement.classList.add("active");
 }
 
 async function addToCart(itemId) {
@@ -998,54 +1311,148 @@ async function addToCart(itemId) {
   }
 }
 
+// =========================
+// LOAD CART
+// =========================
+
 async function loadCart() {
-  if (!requireCustomer()) return false;
+  if (!requireCustomer()) {
+    return false;
+  }
 
-  const container = document.getElementById("cartList");
-  const totalBox = document.getElementById("yzCartTotal");
+  const cartList =
+    document.getElementById("cartList");
 
-  container.innerHTML = '<p class="muted">Loading cart...</p>';
-  totalBox.textContent = "";
+  const cartTotal =
+    document.getElementById("yzCartTotal");
+
+  const checkoutButton =
+    document.getElementById("yzCheckoutButton");
+
+  cartList.innerHTML =
+    '<p class="muted">Loading cart...</p>';
+
+  cartTotal.textContent = "";
+
+  if (checkoutButton) {
+    checkoutButton.disabled = true;
+    checkoutButton.textContent = "Checkout";
+  }
 
   try {
-    const res = await fetch(`${API}/cart/${customerId}`);
-    const items = await res.json();
+    const res = await fetch(
+      `${API}/cart/${customerId}`
+    );
+
+    const data = await res.json();
 
     if (!res.ok) {
       throw new Error(
-        items.error || items.details || "Unable to load cart."
+        data.details ||
+        data.error ||
+        "Unable to load cart."
       );
     }
 
-    logApi("GET", `/cart/${customerId}`, null, items, true);
+    if (!Array.isArray(data) || data.length === 0) {
+      cartList.innerHTML =
+        '<p class="muted">Your cart is empty.</p>';
 
-    if (!Array.isArray(items) || items.length === 0) {
-      container.innerHTML = '<p class="muted">Your cart is empty.</p>';
+      cartTotal.textContent = "";
+
+      if (checkoutButton) {
+        checkoutButton.disabled = true;
+      }
+
       return false;
     }
 
-    yzCurrentOrderTotal = items.reduce(
-      (sum, item) => sum + Number(item.subtotal || 0),
-      0
+    let total = 0;
+
+    cartList.innerHTML = data.map(item => {
+      const itemPrice = Number(item.price);
+      const subtotal = Number(item.subtotal);
+
+      total += subtotal;
+
+      return `
+        <div class="yz-cart-item">
+
+          <div class="yz-cart-item-info">
+            <h3>${item.item_name}</h3>
+
+            <p class="muted">
+              ${item.stall_name || "Unknown Stall"}
+            </p>
+
+            <p>
+              $${itemPrice.toFixed(2)}
+              ×
+              ${item.quantity}
+            </p>
+          </div>
+
+          <div class="yz-cart-item-actions">
+
+            <p>
+              <strong>
+                $${subtotal.toFixed(2)}
+              </strong>
+            </p>
+
+            <button
+              class="danger"
+              onclick="removeCartItem(
+                ${item.cart_item_id},
+                this
+              )">
+              Remove
+            </button>
+
+          </div>
+
+        </div>
+      `;
+    }).join("");
+
+    cartTotal.innerHTML = `
+      <div class="yz-cart-total-row">
+        <strong>Total</strong>
+
+        <strong>
+          $${total.toFixed(2)}
+        </strong>
+      </div>
+    `;
+
+    if (checkoutButton) {
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = "Checkout";
+    }
+
+    logApi(
+      "GET",
+      `/cart/${customerId}`,
+      null,
+      data,
+      true
     );
 
-    container.innerHTML = items.map(item => `
-      <div class="yz-cart-row">
-        <div>
-          <b>${item.item_name}</b>
-          <div class="muted">
-            $${Number(item.price).toFixed(2)} × ${item.quantity}
-          </div>
-        </div>
-        <b>$${Number(item.subtotal).toFixed(2)}</b>
-      </div>
-    `).join("");
-
-    totalBox.textContent =
-      `Total: $${yzCurrentOrderTotal.toFixed(2)}`;
-
     return true;
+
   } catch (err) {
+    cartList.innerHTML = `
+      <div class="status err">
+        ${err.message}
+      </div>
+    `;
+
+    cartTotal.textContent = "";
+
+    if (checkoutButton) {
+      checkoutButton.disabled = true;
+    }
+
     logApi(
       "GET",
       `/cart/${customerId}`,
@@ -1054,88 +1461,134 @@ async function loadCart() {
       false
     );
 
-    container.innerHTML =
-      `<div class="status err">${err.message}</div>`;
-
     return false;
   }
 }
 
-async function yzCheckout() {
-  if (!requireCustomer()) return;
+// =========================
+// CHECKOUT
+// =========================
 
-  const hasItems = await loadCart();
-
-  if (!hasItems) {
-    showStatus(
-      "checkoutStatus",
-      "Add at least one item before checkout.",
-      false
-    );
+async function yzCheckout(button) {
+  if (!requireCustomer()) {
     return;
   }
 
-  const stallId = Number(selectedStallId);
-
-  if (!stallId) {
-    showStatus(
-      "checkoutStatus",
-      "Select the stall in Browse Stalls before checkout.",
-      false
-    );
-    return;
-  }
+  button.disabled = true;
+  button.textContent = "Creating order...";
 
   const payload = {
     customerId: Number(customerId)
   };
 
-  const res = await fetch(`${API}/orders/checkout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-});
-
   try {
-    const res = await fetch(`${API}/orders/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-      customerId: Number(customerId)
-    })
-    });
+    const res = await fetch(
+      `${API}/orders/checkout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
 
     const data = await res.json();
 
     if (!res.ok) {
       throw new Error(
-        data.details || data.error || "Checkout failed."
+        data.details ||
+        data.error ||
+        "Checkout failed."
       );
     }
 
-    yzCurrentOrderId = Number(data.orderId);
-    yzCurrentOrderTotal = Number(data.totalPrice);
+    yzCurrentOrderId =
+      Number(data.orderId);
 
-    localStorage.setItem("latestOrderId", yzCurrentOrderId);
-    localStorage.setItem("latestOrderTotal", yzCurrentOrderTotal);
+    yzCurrentOrderTotal =
+      Number(data.totalPrice);
 
-    document.getElementById("paymentOrderId").value =
-      yzCurrentOrderId;
+    localStorage.setItem(
+      "latestOrderId",
+      String(yzCurrentOrderId)
+    );
 
-    document.getElementById("statusOrderId").value =
-      yzCurrentOrderId;
+    localStorage.setItem(
+      "latestOrderTotal",
+      String(yzCurrentOrderTotal)
+    );
 
-    document.getElementById("yzPaymentOrderNumber").textContent =
-      yzCurrentOrderId;
+    const paymentOrderElement =
+      document.getElementById(
+        "yzPaymentOrderNumber"
+      );
 
-    document.getElementById("yzPaymentTotal").textContent =
-      `$${yzCurrentOrderTotal.toFixed(2)}`;
+    if (paymentOrderElement) {
+      paymentOrderElement.textContent =
+        yzCurrentOrderId;
+    }
 
-    logApi("POST", "/orders/checkout", payload, data, true);
+    const paymentTotalElement =
+      document.getElementById(
+        "yzPaymentTotal"
+      );
+
+    if (paymentTotalElement) {
+      paymentTotalElement.textContent =
+        `$${yzCurrentOrderTotal.toFixed(2)}`;
+    }
+
+    const paymentOrderInput =
+      document.getElementById(
+        "paymentOrderId"
+      );
+
+    if (paymentOrderInput) {
+      paymentOrderInput.value =
+        yzCurrentOrderId;
+    }
+
+    const statusOrderInput =
+      document.getElementById(
+        "statusOrderId"
+      );
+
+    if (statusOrderInput) {
+      statusOrderInput.value =
+        yzCurrentOrderId;
+    }
+
+    document.getElementById(
+      "cartList"
+    ).innerHTML =
+      '<p class="muted">Your cart is empty.</p>';
+
+    document.getElementById(
+      "yzCartTotal"
+    ).textContent = "";
+
+    document.getElementById(
+      "checkoutStatus"
+    ).innerHTML = "";
+
+    logApi(
+      "POST",
+      "/orders/checkout",
+      payload,
+      data,
+      true
+    );
+
     yzShowPage("payment");
+
   } catch (err) {
+    showStatus(
+      "checkoutStatus",
+      err.message,
+      false
+    );
+
     logApi(
       "POST",
       "/orders/checkout",
@@ -1144,7 +1597,71 @@ async function yzCheckout() {
       false
     );
 
-    showStatus("checkoutStatus", err.message, false);
+    button.disabled = false;
+    button.textContent = "Checkout";
+  }
+}
+
+// =========================
+// REMOVE CART ITEM
+// =========================
+
+async function removeCartItem(
+  cartItemId,
+  button
+) {
+  const confirmed = confirm(
+    "Remove this item from your cart?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Removing...";
+
+  try {
+    const res = await fetch(
+      `${API}/cart/${cartItemId}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.details ||
+        data.error ||
+        "Unable to remove item."
+      );
+    }
+
+    logApi(
+      "DELETE",
+      `/cart/${cartItemId}`,
+      null,
+      data,
+      true
+    );
+
+    await loadCart();
+
+  } catch (err) {
+    alert(err.message);
+
+    button.disabled = false;
+    button.textContent = "Remove";
+
+    logApi(
+      "DELETE",
+      `/cart/${cartItemId}`,
+      null,
+      { error: err.message },
+      false
+    );
   }
 }
 
@@ -1237,6 +1754,84 @@ async function yzGetOrderStatus(orderId) {
   }
 }
 
+async function loadHistoryFromCart() {
+  if (!requireCustomer()) return;
+
+  const container = document.getElementById("cartHistoryList");
+  if (!container) return;
+
+  if (container.dataset.open === "true") {
+    container.innerHTML = "";
+    container.dataset.open = "false";
+    return;
+  }
+
+  container.dataset.open = "true";
+  container.innerHTML =
+    '<p class="muted">Loading order history...</p>';
+
+  try {
+    const res = await fetch(
+      `${API}/orders/history/${customerId}`
+    );
+
+    const orders = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        orders.error ||
+        orders.details ||
+        "Unable to load order history."
+      );
+    }
+
+    logApi(
+      "GET",
+      `/orders/history/${customerId}`,
+      null,
+      orders,
+      true
+    );
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      container.innerHTML =
+        '<p class="muted">No orders found.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="yz-summary">
+        <h3 style="margin-top:0;">Order History</h3>
+        ${orders.map(order => `
+          <div class="feedback-entry">
+            <b>Order #${order.order_id}</b>
+            <p style="margin:4px 0;">
+              Total: $${Number(order.total_price || 0).toFixed(2)}
+            </p>
+            <p style="margin:4px 0;">
+              Created: ${order.created_at
+                ? new Date(order.created_at).toLocaleString()
+                : "Not available"}
+            </p>
+            <span class="badge">${order.status || "Pending"}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML =
+      `<div class="status err">${err.message}</div>`;
+
+    logApi(
+      "GET",
+      `/orders/history/${customerId}`,
+      null,
+      { error: err.message },
+      false
+    );
+  }
+}
+
 async function loadHistory() {
   if (!requireCustomer()) return;
 
@@ -1301,6 +1896,12 @@ function yzStartNewOrder() {
   document.getElementById("checkoutStatus").innerHTML = "";
   document.getElementById("historyList").innerHTML = "";
 
+  const cartHistoryList = document.getElementById("cartHistoryList");
+  if (cartHistoryList) {
+    cartHistoryList.innerHTML = "";
+    cartHistoryList.dataset.open = "false";
+  }
+
   switchTab("browse");
   yzShowPage("cart");
 }
@@ -1309,6 +1910,7 @@ function yzStartNewOrder() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 updateSessionUI();
 loadStalls();
+if(officer_token){showOperatorTab();}
 </script>
 </body>
 </html>

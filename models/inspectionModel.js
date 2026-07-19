@@ -5,7 +5,25 @@ const { getGrade } = require("./utility");
 async function retrieveAllInspection() {
     try {
         const connection = await poolPromise;
-        const query = `select inspection_id, stall_id, officer_id, score, remarks, inspection_date from inspections`
+        const query = `
+            SELECT
+                i.inspection_id,
+                i.stall_id,
+                s.stall_name,
+                i.officer_id,
+                o.name AS officer_name,
+                i.score,
+                hg.grade,
+                i.remarks,
+                i.inspection_date
+            FROM inspections i
+            JOIN stalls s
+                ON i.stall_id = s.stall_id
+            JOIN nea_officers o
+                ON i.officer_id = o.officer_id
+            LEFT JOIN hygiene_grades hg
+                ON i.inspection_id = hg.inspection_id
+        `
         
         const result = await connection.request().query(query);
         
@@ -20,13 +38,31 @@ async function retrieveAllInspection() {
 async function retrieveInspectionByID(id) {
     try {
         const connection = await poolPromise;
-        const query = `select inspection_id, stall_id, officer_id, score, remarks, inspection_date from inspections where inspection_id = @id`
+        const query = `
+            SELECT
+                i.inspection_id,
+                i.stall_id,
+                s.stall_name,
+                i.officer_id,
+                o.name AS officer_name,
+                i.score,
+                hg.grade,
+                i.remarks,
+                i.inspection_date
+            FROM inspections i
+            JOIN stalls s
+                ON i.stall_id = s.stall_id
+            JOIN nea_officers o
+                ON i.officer_id = o.officer_id
+            LEFT JOIN hygiene_grades hg
+                ON i.inspection_id = hg.inspection_id
+        `
         
         const request = await connection.request()
         request.input("id", id);
         const result = await request.query(query);
         
-        return result.recordset[0];
+        return result.recordset[0] || null;
     }
     catch (error) {
         console.log(`Database error: ${error}`)
@@ -37,14 +73,14 @@ async function retrieveInspectionByID(id) {
 async function createInspection(inspectionInfo) {
     try {
         const connection = await poolPromise;
-        let remarks = inspectionInfo.remarks;
+        let remarks = inspectionInfo.remarks || "None";
         const query = `
             insert into inspections (stall_id, officer_id, score, remarks) values (@stall_id, @officer_id, @score, @remarks); 
             select scope_identity() as id;
             update stalls set hygiene_grade = @grade where stall_id = @stall_id;
         `;
 
-        if (!inspectionInfo.remarks) { remarks = "None"}
+        // if (!inspectionInfo.remarks) { remarks = "None"}
 
         const request = await connection.request()
         request.input("stall_id", inspectionInfo.stall_id);
@@ -67,8 +103,13 @@ async function createInspection(inspectionInfo) {
 async function updateInspection(id,inspectionInfo) {
     try {
         const connection = await poolPromise;
-        let remarks = inspectionInfo.remarks;
         const oldInspection = await retrieveInspectionByID(id);
+
+        const stall_id = inspectionInfo.stall_id ?? oldInspection.stall_id;
+        const officer_id = inspectionInfo.officer_id ?? oldInspection.officer_id;
+        const score = inspectionInfo.score ?? oldInspection.score;
+        const remarks = inspectionInfo.remarks ?? oldInspection.remarks;
+
         const query = `
             update inspections
             set
@@ -79,20 +120,18 @@ async function updateInspection(id,inspectionInfo) {
             where inspection_id = @id;
         `;
 
-        if (!remarks) { remarks = oldInspection.remarks; }
-
         const request = await connection.request()
         request.input("id", id);
-        request.input("stall_id", inspectionInfo.stall_id);
-        request.input("officer_id", inspectionInfo.officer_id);
-        request.input("score", inspectionInfo.score);
+        request.input("stall_id", stall_id);
+        request.input("officer_id", officer_id);
+        request.input("score", score);
         request.input("remarks", remarks);
         const result = await request.query(query);
 
         if (result.rowsAffected[0] === 0) {
             return null
         }
-        return retrieveInspectionByID(id);
+        return await retrieveInspectionByID(id);
     }
     catch (error) {
         console.log(`Database error: ${error}`)
