@@ -644,25 +644,271 @@ Load Profile
 
 }
 
-async function loadMenu(){
+//Manage Menu Items
+async function loadMenu() {
 
-document.getElementById("ownerContent").innerHTML=`
+document.getElementById("ownerContent").innerHTML = `
 
 <h3>Menu Management</h3>
 
-<button onclick="alert('Add Menu')">
+<div class="card">
 
-Add Menu Item
+<div class="row">
+    <div>
+        <label>Item Name</label>
+        <input type="text" id="menuName" placeholder="Enter item name">
+    </div>
 
+    <div>
+        <label>Price ($)</label>
+        <input type="number" id="menuPrice" step="0.01" placeholder="0.00">
+    </div>
+</div>
+
+<label>Description</label>
+<textarea
+    id="menuDescription"
+    placeholder="Enter description">
+</textarea>
+
+<label>Availability</label>
+
+<select id="menuAvailable">
+    <option value="true">Available</option>
+    <option value="false">Unavailable</option>
+</select>
+
+<br><br>
+
+<button onclick="saveMenuItem()">
+    ➕ Add Menu Item
 </button>
+
+<hr>
+
+<h3>Current Menu Items</h3>
+
+<div id="menuTable">
 
 <div class="placeholder">
 
-Menu items will appear here.
+Loading menu items...
+
+</div>
+
+</div>
 
 </div>
 
 `;
+
+loadOwnerMenu();
+
+}
+
+async function loadOwnerMenu() {
+
+    const stallId = 1;
+
+    const table = document.getElementById("menuTable");
+
+    try {
+
+        const res = await fetch(`${API}/menu/stall/${stallId}`);
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || "Unable to load menu.");
+        }
+
+        const menuItems = data.data;
+
+        if (!menuItems || menuItems.length === 0) {
+            table.innerHTML = `
+                <div class="placeholder">
+                    No menu items found.
+                </div>
+            `;
+            return;
+        }
+
+        table.innerHTML = "";
+
+        menuItems.forEach(item => {
+
+            table.innerHTML += `
+                <div class="menu-item">
+
+                    <div>
+
+                        <strong>${item.item_name}</strong><br>
+
+                        <span class="muted">
+                            ${item.description || ""}
+                        </span><br>
+
+                        <span class="badge">
+                            $${Number(item.price).toFixed(2)}
+                        </span>
+
+                    </div>
+
+                    <div>
+
+                        <button
+                            class="small"
+                            onclick="editMenuItem(${item.item_id})">
+
+                            Edit
+
+                        </button>
+
+                        <button
+                            class="small secondary"
+                            onclick="deleteMenuItem(${item.item_id})">
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+    } catch (err) {
+
+        table.innerHTML = `
+            <div class="status err">
+                ${err.message}
+            </div>
+        `;
+
+    }
+
+}
+
+async function deleteMenuItem(itemId) {
+
+    if (!confirm("Are you sure you want to delete this menu item?")) {
+        return;
+    }
+
+    try {
+
+        const res = await fetch(`${API}/menu/${itemId}`, {
+            method: "DELETE"
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || "Unable to delete menu item.");
+        }
+
+        alert("Menu item deleted successfully.");
+
+        loadOwnerMenu();
+
+    } catch (err) {
+
+        alert(err.message);
+
+    }
+
+}
+
+async function editMenuItem(itemId) {
+
+    try {
+
+        const res = await fetch(`${API}/menu/${itemId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || "Unable to load menu item.");
+        }
+
+        const item = data.data;
+
+        editingMenuId = itemId;
+
+        document.getElementById("menuName").value = item.item_name;
+        document.getElementById("menuPrice").value = item.price;
+        document.getElementById("menuDescription").value = item.description || "";
+        document.getElementById("menuAvailable").value = item.is_available ? "true" : "false";
+
+        document.querySelector("button[onclick='saveMenuItem()']").innerText = "💾 Update Menu Item";
+
+    } catch (err) {
+
+        alert(err.message);
+
+    }
+
+}
+
+async function saveMenuItem() {
+
+    const itemName = document.getElementById("menuName").value.trim();
+    const price = document.getElementById("menuPrice").value;
+    const description = document.getElementById("menuDescription").value.trim();
+    const isAvailable = document.getElementById("menuAvailable").value === "true";
+
+    if (!itemName || !price) {
+        alert("Please enter the item name and price.");
+        return;
+    }
+
+    try {
+
+        const url = editingMenuId
+          ? `${API}/menu/${editingMenuId}`
+          : `${API}/menu`;
+
+        const method = editingMenuId ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+          method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                stall_id: 1,
+                item_name: itemName,
+                description: description,
+                price: Number(price),
+                is_available: isAvailable,
+                image_url: null
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || "Unable to add menu item.");
+        }
+
+        alert("Menu item added successfully!");
+
+        document.getElementById("menuName").value = "";
+        document.getElementById("menuPrice").value = "";
+        document.getElementById("menuDescription").value = "";
+        document.getElementById("menuAvailable").value = "true";
+        editingMenuId = null;
+
+        document.querySelector("button[onclick='saveMenuItem()']").innerText =
+    "➕ Add Menu Item";
+        loadOwnerMenu();
+
+    } catch (err) {
+
+        alert(err.message);
+
+    }
 
 }
 
