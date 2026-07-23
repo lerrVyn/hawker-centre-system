@@ -1,6 +1,8 @@
 //ziying
 const Joi = require("joi");
 const profileCustModel = require("../models/profileCustModel");
+const bcrypt = require("bcryptjs");
+const passwordCustModel = require("../models/passwordCustModel");
 
 // Validation rules for editing profile
 const updateProfileSchema = Joi.object({
@@ -23,6 +25,22 @@ const updateProfileSchema = Joi.object({
     .messages({
       "string.pattern.base": "Phone number must contain exactly 8 digits"
     })
+});
+
+const changePasswordSchema = Joi.object({
+    currentPassword: Joi.string()
+        .required(),
+
+    newPassword: Joi.string()
+        .min(6)
+        .required(),
+
+    confirmPassword: Joi.string()
+        .valid(Joi.ref("newPassword"))
+        .required()
+        .messages({
+            "any.only": "Confirm password must match the new password"
+        })
 });
 
 // GET /profile/customer
@@ -109,7 +127,88 @@ async function updateProfile(req, res) {
   }
 }
 
+async function changeCustomerPassword(req, res) {
+    try {
+        const customerId = req.user.customer_id;
+
+        // 1. Validate request body
+        const { error, value } = changePasswordSchema.validate(req.body);
+
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.details[0].message
+            });
+        }
+
+        const {
+            currentPassword,
+            newPassword
+        } = value;
+
+        // 2. Get current password hash from database
+        const customer =
+            await passwordCustModel.getCustomerPassword(customerId);
+
+        if (!customer) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer account not found"
+            });
+        }
+
+        // 3. Check whether current password is correct
+        const passwordMatches = await bcrypt.compare(
+            currentPassword,
+            customer.password_hash
+        );
+
+        if (!passwordMatches) {
+            return res.status(401).json({
+                success: false,
+                message: "Current password is incorrect"
+            });
+        }
+
+        // 4. Prevent customer from reusing the same password
+        const samePassword = await bcrypt.compare(
+            newPassword,
+            customer.password_hash
+        );
+
+        if (samePassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be different from the current password"
+            });
+        }
+
+        // 5. Hash the new password
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+        // 6. Update database
+        await passwordCustModel.updateCustomerPassword(
+            customerId,
+            newPasswordHash
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Password changed successfully"
+        });
+
+    } catch (error) {
+        console.error("Change password error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to change password"
+        });
+    }
+};
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  changeCustomerPassword
 };

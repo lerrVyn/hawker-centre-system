@@ -18,4 +18,10 @@ router.put(
   profileCustController.updateProfile
 );
 
+router.put(
+  "/customer/password",
+  verifyToken,
+  profileCustController.changeCustomerPassword
+);
+
 module.exports = router;
