@@ -3,6 +3,7 @@ const sql = require("mssql");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
+const swaggerUi = require("swagger-ui-express");
 
 dotenv.config();
 
@@ -24,7 +25,11 @@ const catalogCustRouter = require("./routes/catalogCust");
 const menuRouter = require("./routes/menu");
 const profileCustRoutes = require("./routes/profileCust");
 const dashboardRoutes = require("./routes/dashboard");
-
+const authOwnerRouter = require("./routes/authOwner");
+const feedbackRepliesRouter = require("./routes/feedbackReplies");
+const complaintsRouter = require("./routes/complaints");
+const complaintStatusRouter = require("./routes/complaintStatus");
+const ownerFeedbackRouter = require("./routes/ownerFeedback");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +41,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve frontend files
 app.use(express.static(path.join(__dirname, "Frontend")));
+
+// Swagger docs
+try {
+  const swaggerDocument = require("./swagger-output.json");
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} catch (err) {
+  console.warn("swagger-output.json not found yet - run `node swagger.js` to generate it.");
+}
 
 // Routes
 app.use("/auth/customer", authCustRouter);
@@ -53,6 +66,11 @@ app.use("/catalog/customer", catalogCustRouter);
 app.use("/menu", menuRouter);
 app.use("/profile/customer", profileCustRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/auth/owner", authOwnerRouter);
+app.use("/feedback-replies", feedbackRepliesRouter);
+app.use("/complaints", complaintStatusRouter);
+app.use("/complaints", complaintsRouter);
+app.use("/owner", ownerFeedbackRouter);
 
 // Basic API test route
 app.get("/api", (req, res) => {
