@@ -680,7 +680,7 @@ async function changePassword() {
     try {
 
         const res = await fetch(
-            `${API}/profile/customer/password`,
+            `${API}/profile/customer/customer/password`,
             {
                 method: "PUT",
 
@@ -697,17 +697,27 @@ async function changePassword() {
             }
         );
 
-        const data = await res.json();
+        const responseText = await res.text();
 
+        let data = {};
+
+        if (responseText) {
+            try {
+                 data = JSON.parse(responseText);
+            } catch {
+                data = { message: responseText };
+            }
+       }
+        console.log("Status:", res.status);
+        console.log("Response:", responseText);
+        console.log("Token:", token);
         if (!res.ok) {
             throw new Error(
                 data.message ||
                 data.error ||
-                (Array.isArray(data.details)
-                    ? data.details.join(", ")
-                    : "Unable to change password.")
+                `Unable to change password. Error ${res.status}: ${res.statusText}`
             );
-        }
+   }
 
         showStatus(
             "passwordStatus",
