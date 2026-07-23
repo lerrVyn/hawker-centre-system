@@ -19,7 +19,7 @@ router.put(
 );
 
 router.put(
-  "/customer/password",
+  "/password",
   verifyToken,
   profileCustController.changeCustomerPassword
 );

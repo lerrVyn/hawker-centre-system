@@ -2,7 +2,6 @@
 const Joi = require("joi");
 const profileCustModel = require("../models/profileCustModel");
 const bcrypt = require("bcryptjs");
-const passwordCustModel = require("../models/passwordCustModel");
 
 // Validation rules for editing profile
 const updateProfileSchema = Joi.object({
@@ -148,7 +147,7 @@ async function changeCustomerPassword(req, res) {
 
         // 2. Get current password hash from database
         const customer =
-            await passwordCustModel.getCustomerPassword(customerId);
+            await profileCustModel.getCustomerPassword(customerId);
 
         if (!customer) {
             return res.status(404).json({
@@ -187,7 +186,7 @@ async function changeCustomerPassword(req, res) {
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
         // 6. Update database
-        await passwordCustModel.updateCustomerPassword(
+        await profileCustModel.updateCustomerPassword(
             customerId,
             newPasswordHash
         );

@@ -358,7 +358,13 @@
       My Profile
     </button>
 
-  </div>
+    <button
+      class="small secondary"
+      onclick="openChangePassword()">
+      🔒 Change Password
+    </button>
+
+</div>
 
 </div>
 
@@ -420,6 +426,57 @@
   <div id="profileStatus"></div>
 
 </div>
+
+<!-- ZIYING CHANGE PASSWORD -->
+<div class="card" id="changePasswordCard" style="display:none;">
+
+  <h2>
+    🔒 Change Password
+    <span class="badge">Ziying</span>
+  </h2>
+
+  <div>
+    <label for="currentPassword">Current Password</label>
+    <input
+      id="currentPassword"
+      type="password"
+      placeholder="Enter current password">
+  </div>
+
+  <div>
+    <label for="newPassword">New Password</label>
+    <input
+      id="newPassword"
+      type="password"
+      placeholder="Enter new password">
+  </div>
+
+  <div>
+    <label for="confirmPassword">Confirm New Password</label>
+    <input
+      id="confirmPassword"
+      type="password"
+      placeholder="Confirm new password">
+  </div>
+
+  <div class="flow-actions">
+
+    <button onclick="changePassword()">
+      Change Password
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeChangePassword()">
+      Close
+    </button>
+
+  </div>
+
+  <div id="passwordStatus"></div>
+
+</div>
+<!-- END OF CHANGE PASSWORD -->
 <!-- END OF ZIYING CUSTOMER PROFILE -->
 
 
@@ -556,6 +613,121 @@ async function loadCustomerProfile() {
 function closeCustomerProfile(){
 
     document.getElementById("customerProfileCard").style.display = "none";
+
+}
+function openChangePassword() {
+
+    if (!token) {
+        alert("Please log in first.");
+        switchTab("account");
+        return;
+    }
+
+    document.getElementById("changePasswordCard").style.display = "block";
+
+}
+
+function closeChangePassword() {
+
+    document.getElementById("changePasswordCard").style.display = "none";
+
+    // Clear all password fields
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+
+    document.getElementById("passwordStatus").innerHTML = "";
+
+}
+async function changePassword() {
+
+    const currentPassword =
+        document.getElementById("currentPassword").value;
+
+    const newPassword =
+        document.getElementById("newPassword").value;
+
+    const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showStatus(
+            "passwordStatus",
+            "Please fill in all password fields.",
+            false
+        );
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showStatus(
+            "passwordStatus",
+            "New password must be at least 6 characters.",
+            false
+        );
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showStatus(
+            "passwordStatus",
+            "New password and confirmation do not match.",
+            false
+        );
+        return;
+    }
+
+    try {
+
+        const res = await fetch(
+            `${API}/profile/customer/password`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                    confirmPassword
+                })
+            }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(
+                data.message ||
+                data.error ||
+                (Array.isArray(data.details)
+                    ? data.details.join(", ")
+                    : "Unable to change password.")
+            );
+        }
+
+        showStatus(
+            "passwordStatus",
+            data.message || "Password changed successfully!",
+            true
+        );
+
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+
+    } catch (err) {
+
+        showStatus(
+            "passwordStatus",
+            err.message,
+            false
+        );
+
+    }
 
 }
 
