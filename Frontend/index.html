@@ -2,2291 +2,430 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Hawker Centre Management System - Customer Demo</title>
-<style>
-  * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafaf9; margin: 0; padding: 0; color: #1f2937; }
-  header { background: #b45309; color: white; padding: 20px 24px; }
-  header h1 { margin: 0; font-size: 22px; }
-  header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
-  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid #e5e7eb; }
-  .tab { padding: 10px 18px; cursor: pointer; font-size: 14px; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-  .tab.active { color: #b45309; border-bottom-color: #b45309; font-weight: 600; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  .card { background: #fff; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f0f0ef; }
-  h2 { font-size: 16px; margin: 0 0 12px; }
-  input, select, textarea, button { font-size: 14px; padding: 9px; margin: 4px 0; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; }
-  button { background: #b45309; color: white; border: none; cursor: pointer; width: auto; padding: 9px 18px; font-weight: 500; }
-  button:hover { background: #92400e; }
-  button.secondary { background: #6b7280; }
-  button.small { padding: 6px 12px; font-size: 13px; width: auto; display: inline-block; }
-  .row { display: flex; gap: 8px; align-items: flex-end; }
-  .row > * { flex: 1; }
-  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
-  .status.ok { background: #dcfce7; color: #166534; }
-  .status.err { background: #fee2e2; color: #991b1b; }
-  .menu-item { border-bottom: 1px solid #f0f0ef; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
-  .menu-item:last-child { border-bottom: none; }
-  .muted { color: #6b7280; font-size: 13px; }
-  .feedback-entry { border-bottom: 1px solid #f0f0ef; padding: 10px 0; }
-  .stars { color: #b45309; font-size: 14px; }
-  .badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
-  .placeholder { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; border: 2px dashed #e5e7eb; border-radius: 8px; }
-  .flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-  .flow-step { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fafafa; }
-  .flow-step h3 { font-size: 14px; margin: 0 0 8px; }
-  .flow-step .endpoint { font-family: Consolas, monospace; font-size: 12px; color: #92400e; margin-bottom: 8px; }
-  .flow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-  .summary-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; }
-  .api-log { background: #111827; color: #f9fafb; border-radius: 8px; padding: 12px; font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; min-height: 90px; overflow-x: auto; }
-  @media (max-width: 760px) {
-    .flow-steps, .summary-grid { grid-template-columns: 1fr; }
-  }
-
-  /* Yuzhen order flow only */
-  .yz-checkout-shell { max-width: 720px; margin: 0 auto; }
-  .yz-progress { display: flex; gap: 8px; margin-bottom: 16px; }
-  .yz-progress-step { flex: 1; padding: 9px; text-align: center; border-radius: 6px; background: #f3f4f6; color: #6b7280; font-size: 13px; }
-  .yz-progress-step.active { background: #fef3c7; color: #92400e; font-weight: 600; }
-  .yz-order-page { display: none; }
-  .yz-order-page.active { display: block; }
-  .yz-cart-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
-  .yz-cart-total { text-align: right; font-size: 18px; font-weight: 700; margin-top: 14px; }
-  .yz-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
-  .yz-complete-mark { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #166534; font-size: 32px; font-weight: 700; }
-  .yz-summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-top: 12px; }
-  .yz-cart-item { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; background: white; }
-  .yz-cart-item-info h3 { margin: 0 0 6px; }
-  .yz-cart-item-info p { margin: 4px 0; }
-  .yz-cart-item-actions { text-align: right; }
-  .yz-cart-total-row { display: flex; justify-content: space-between; padding: 16px; margin-top: 12px; font-size: 18px; border-top: 2px solid #ddd; }
-  .yz-actions { display: flex; gap: 10px; margin-top: 16px; }
-  button.danger { background: #b42318; color: white; }
-  button.danger:hover { background: #912018; }
-  button:disabled { cursor: not-allowed; opacity: 0.6; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hawker Centre</title>
+<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header>
-  <h1>🍜 Hawker Centre Management System</h1>
-  <p>Customer Journey Demo &mdash; Feedback & Likes (SA-37 / SA-38)</p>
-</header>
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: ROLE SELECT (first thing anyone sees)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-role">
+  <div class="role-hero">
+    <div class="role-logo">🍜</div>
+    <h1>Hawker Centre</h1>
+    <p class="role-sub">Order food, or manage your stall.</p>
 
-<div class="container">
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('browse')">Browse Stalls</div>
-    <div class="tab" onclick="switchTab('feedback')">Feedback</div>
-    <div class="tab" onclick="switchTab('grade')">Grade</div>
-    <div class="tab" onclick="switchTab('account')">Account</div>
-    <div class="tab" onclick="switchTab('other')">Other Features</div>
-    <div class="tab" id="operatorTab" style="display:none" onclick="switchTab('operator')">Operator Management</div>
-  </div>
-
-  <!-- ACCOUNT TAB -->
-  <div class="panel" id="panel-account">
-    <div class="card" id="authCard">
-      <h2>Login / Register</h2>
-      <input id="authName" placeholder="Name (register only)" />
-      <div class="row">
-        <input id="authEmail" placeholder="Email" />
-        <input id="authPassword" type="password" placeholder="Password" />
+    <div class="role-cards">
+      <div class="role-card" onclick="goScreen('customer-auth')">
+        <div class="role-card-icon">🍽️</div>
+        <h2>Order Food</h2>
+        <p>Browse stalls, order, and leave reviews.</p>
       </div>
-      <div class="row">
-        <button onclick="register()">Register</button>
-        <button onclick="login()" class="secondary">Login</button>
-        <button class="secondary" onclick="officerLogin()">Officer Login</button>
-      </div>
-      <div id="authStatus"></div>
-    </div>
-    <div class="card" id="sessionCard" style="display:none;">
-      <h2>Session</h2>
-      <p class="muted">Logged in as <b id="sessionName"></b> (customer_id: <span id="sessionId"></span>)</p>
-      <button class="secondary" onclick="logout()">Logout</button>
-    </div>
-  </div>
-
-  <!-- BROWSE TAB -->
-  <div class="panel active" id="panel-browse">
-    <div class="card">
-      <h2>Browse Stalls & Menu</h2>
-      <select id="stallSelect" onchange="onStallChange()">
-        <option value="">-- Select a stall --</option>
-      </select>
-      <div id="menuList" style="margin-top:10px;"></div>
-    </div>
-  </div>
-
-  <!-- FEEDBACK TAB -->
-  <div class="panel" id="panel-feedback">
-    <div class="card">
-      <h2>Submit Feedback <span class="muted">(select a stall in Browse tab first)</span></h2>
-      <p class="muted" id="feedbackStallLabel">No stall selected.</p>
-      <select id="feedbackRating">
-        <option value="5">★★★★★ Excellent</option>
-        <option value="4">★★★★☆ Good</option>
-        <option value="3">★★★☆☆ Okay</option>
-        <option value="2">★★☆☆☆ Poor</option>
-        <option value="1">★☆☆☆☆ Terrible</option>
-      </select>
-      <textarea id="feedbackComment" placeholder="Your comment..."></textarea>
-      <button onclick="submitFeedback()">Submit Feedback</button>
-      <div id="feedbackStatus"></div>
-    </div>
-    <div class="card">
-      <h2>Feedback for this stall</h2>
-      <div id="feedbackList" class="muted">Select a stall in the Browse tab to see feedback.</div>
-    </div>
-  </div>
-
-  <!-- GRADE TAB -->
-  <div class="panel" id="panel-grade">
-    <div class="card">
-      <h2>Current Hygiene Grade <span class="muted" id="gradeSubtitle">(Select a stall first)</span></h2>
-      <div id="currentGradeDisplay" class="placeholder">Select a stall on the Browse tab.</div>
-    </div>
-    <div class="card">
-      <h2>Grade History</h2>
-      <div id="gradeHistory"><div class="muted">Select a stall first.</div></div>
-    </div>
-  </div>
-
-  <!-- OPERATOR TAB -->
-  <div class="panel" id="panel-operator">
-    <div class="card">
-      <h2>Operator Management</h2>
-      <button onclick="toggleInspectionHistory(); loadInspectionStalls();"> Inspection History</button>
-      <button onclick="toggleAddInspection()">Add Inspection</button>
-      <div id="inspectionHistory" style="display:none;"></div>
-      <div id="addInspectionPanel" style="display:none; margin-top:15px;">
-        <h3>Add Inspection</h3>
-        <select id="inspectionStall"><option value="">-- Select a stall --</option></select>
-        <input id="inspectionScore" type="number" placeholder="Score (0-100)" min="0" max="100" step="1" required>
-        <textarea
-          id="inspectionRemarks"
-          placeholder="Remarks"></textarea>
-        <button onclick="submitInspection()">Submit Inspection</button>
-        <div id="inspectionStatus"></div>
+      <div class="role-card" onclick="goScreen('staff-auth')">
+        <div class="role-card-icon">🛠️</div>
+        <h2>Staff Login</h2>
+        <p>Stall owner or NEA officer sign in.</p>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- OTHER FEATURES TAB -->
-  <div class="panel" id="panel-other">
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: CUSTOMER AUTH
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-customer-auth">
+  <div class="auth-shell">
+    <button class="back-link" onclick="goScreen('role')">← Back</button>
+    <div class="auth-card">
+      <h1>🍽️ Order Food</h1>
 
-    <div class="card yz-checkout-shell">
-      <h2>Order Function & Management <span class="badge">Yuzhen</span></h2>
-
-      <div class="yz-progress">
-        <div id="yzProgressCart" class="yz-progress-step active">1. Cart</div>
-        <div id="yzProgressPayment" class="yz-progress-step">2. Payment</div>
-        <div id="yzProgressComplete" class="yz-progress-step">3. Complete</div>
+      <div class="auth-toggle">
+        <button class="auth-toggle-btn active" id="custToggleLogin" onclick="setCustAuthMode('login')">Login</button>
+        <button class="auth-toggle-btn" id="custToggleRegister" onclick="setCustAuthMode('register')">Register</button>
       </div>
 
-      <!-- YUZHEN CART PAGE -->
-      <div id="yzPageCart" class="yz-order-page active">
-        <h2>Your Cart</h2>
+      <div id="custRegisterFields" style="display:none;">
+        <label>Name</label>
+        <input id="custRegName" placeholder="Your name" />
+      </div>
 
-        <div id="cartList">
-          <p class="muted">Your cart is empty.</p>
+      <label>Email</label>
+      <input id="custAuthEmail" placeholder="you@example.com" />
+      <label>Password</label>
+      <input id="custAuthPassword" type="password" placeholder="••••••••" />
+
+      <button class="btn-primary btn-block" id="custAuthSubmit" onclick="handleCustomerAuth()">Login</button>
+      <div id="custAuthStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: STAFF AUTH
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-staff-auth">
+  <div class="auth-shell">
+    <button class="back-link" onclick="goScreen('role')">← Back</button>
+    <div class="auth-card">
+      <h1>🛠️ Staff Login</h1>
+
+      <div class="auth-toggle">
+        <button class="auth-toggle-btn active" id="staffToggleOwner" onclick="setStaffAuthMode('owner')">Stall Owner</button>
+        <button class="auth-toggle-btn" id="staffToggleOfficer" onclick="setStaffAuthMode('officer')">NEA Officer</button>
+      </div>
+
+      <label>Email</label>
+      <input id="staffAuthEmail" placeholder="you@example.com" />
+      <label>Password</label>
+      <input id="staffAuthPassword" type="password" placeholder="••••••••" />
+
+      <button class="btn-primary btn-block" id="staffAuthSubmit" onclick="handleStaffAuth()">Login as Stall Owner</button>
+      <div id="staffAuthStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: CUSTOMER APP
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-customer-app">
+  <div class="cust-shell">
+
+    <header class="cust-topbar">
+      <button class="cust-back-btn" id="custBackBtn" onclick="custBack()" style="visibility:hidden;">←</button>
+      <h1 id="custPageTitle">Stalls</h1>
+      <div class="cust-cart-chip" onclick="custNav('cart')">
+        🛒 <span id="custCartCount">0</span>
+      </div>
+    </header>
+
+    <main class="cust-content">
+
+      <!-- HOME: store grid -->
+      <div class="cust-page active" id="cust-page-home">
+        <div class="store-grid" id="storeGrid"></div>
+      </div>
+
+      <!-- STORE: menu / reviews / complaints -->
+      <div class="cust-page" id="cust-page-store">
+        <div class="store-banner" id="storeBanner"></div>
+
+        <div class="pill-tabs">
+          <div class="pill-tab active" data-store-tab="menu" onclick="setStoreTab('menu')">Menu</div>
+          <div class="pill-tab" data-store-tab="reviews" onclick="setStoreTab('reviews')">Reviews</div>
+          <div class="pill-tab" data-store-tab="complaints" onclick="setStoreTab('complaints')">Complaints</div>
         </div>
 
-        <div id="yzCartTotal"></div>
-        <div id="checkoutStatus"></div>
-
-        <div class="yz-actions">
-          <button class="secondary" onclick="switchTab('browse')">Continue Shopping</button>
-          <button class="secondary" onclick="loadHistoryFromCart()">View Order History</button>
-          <button id="yzCheckoutButton" onclick="yzCheckout(this)">Checkout</button>
+        <div class="store-tab-content active" id="storeTab-menu">
+          <div class="menu-grid" id="storeMenuGrid"></div>
         </div>
 
-        <div id="cartHistoryList" class="muted" style="margin-top:12px;"></div>
-      </div>
-
-      <!-- YUZHEN PAYMENT PAGE -->
-      <div id="yzPagePayment" class="yz-order-page">
-        <h2>Payment</h2>
-
-        <div class="yz-summary">
-          <p>Order number: <b id="yzPaymentOrderNumber">-</b></p>
-          <p>Total amount: <b id="yzPaymentTotal">$0.00</b></p>
+        <div class="store-tab-content" id="storeTab-reviews">
+          <div class="stat-grid" id="reviewsStats"></div>
+          <div class="card">
+            <h3>Leave a review</h3>
+            <label>Rating</label>
+            <select id="reviewRating">
+              <option value="5">★★★★★ Excellent</option>
+              <option value="4">★★★★☆ Good</option>
+              <option value="3">★★★☆☆ Okay</option>
+              <option value="2">★★☆☆☆ Poor</option>
+              <option value="1">★☆☆☆☆ Terrible</option>
+            </select>
+            <label>Comment</label>
+            <textarea id="reviewComment" placeholder="Share your experience..."></textarea>
+            <button class="btn-primary" onclick="submitReview()">Submit Review</button>
+            <div id="reviewStatus"></div>
+          </div>
+          <div id="reviewsList"></div>
         </div>
 
-        <select id="paymentMethod">
-          <option value="">-- Select payment method --</option>
-          <option value="Cash">Cash</option>
-          <option value="NETS">NETS</option>
-          <option value="PayNow">PayNow</option>
-        </select>
+        <div class="store-tab-content" id="storeTab-complaints">
+          <div class="card">
+            <h3>Lodge a complaint</h3>
+            <label>Category</label>
+            <select id="complaintCategory">
+              <option value="Hygiene">Hygiene</option>
+              <option value="Food Quality">Food Quality</option>
+              <option value="Service">Service</option>
+              <option value="Overcharging">Overcharging</option>
+              <option value="Other">Other</option>
+            </select>
+            <label>Description</label>
+            <textarea id="complaintDescription" placeholder="Describe the issue (min 10 characters)..."></textarea>
+            <button class="btn-primary" onclick="submitComplaint()">Submit Complaint</button>
+            <div id="complaintStatus"></div>
+          </div>
+          <div id="storeComplaintsList"></div>
+        </div>
+      </div>
 
-        <div class="yz-actions">
-          <button class="secondary" onclick="yzShowPage('cart')">Back</button>
-          <button onclick="makePayment()">Make Payment</button>
+      <!-- CART / CHECKOUT -->
+      <div class="cust-page" id="cust-page-cart">
+
+        <div class="cart-stage active" id="cartStage-cart">
+          <div id="cartList"></div>
+          <div id="cartTotalRow"></div>
+          <div id="checkoutStatus"></div>
+          <button class="btn-primary btn-block" id="checkoutBtn" onclick="goCheckout()">Checkout</button>
         </div>
 
-        <div id="paymentStatus"></div>
-      </div>
-
-      <!-- YUZHEN COMPLETE PAGE -->
-      <div id="yzPageComplete" class="yz-order-page">
-        <div style="text-align:center;">
-          <div class="yz-complete-mark">✓</div>
-          <h2>Payment Complete</h2>
-          <p class="muted">Your order has been created and payment has been recorded.</p>
+        <div class="cart-stage" id="cartStage-payment">
+          <div class="card">
+            <p>Order number: <b id="payOrderNumber">-</b></p>
+            <p>Total amount: <b id="payOrderTotal">$0.00</b></p>
+          </div>
+          <label>Payment Method</label>
+          <select id="paymentMethod">
+            <option value="">-- Select payment method --</option>
+            <option value="Cash">Cash</option>
+            <option value="NETS">NETS</option>
+            <option value="PayNow">PayNow</option>
+          </select>
+          <div id="paymentStatus"></div>
+          <div class="row-2">
+            <button class="btn-secondary" onclick="showCartStage('cart')">Back</button>
+            <button class="btn-primary" onclick="makePayment()">Pay Now</button>
+          </div>
         </div>
 
-        <div class="yz-summary">
-          <p>Order number: <b id="yzCompleteOrderNumber">-</b></p>
-          <p>Payment ID: <b id="yzCompletePaymentId">-</b></p>
-          <p>Payment method: <b id="yzCompletePaymentMethod">-</b></p>
-          <p>Order status: <b id="yzCompleteOrderStatus">-</b></p>
+        <div class="cart-stage" id="cartStage-complete">
+          <div class="complete-check">✓</div>
+          <h2 style="text-align:center;">Order placed!</h2>
+          <div class="card">
+            <p>Order number: <b id="doneOrderNumber">-</b></p>
+            <p>Payment method: <b id="donePaymentMethod">-</b></p>
+            <p>Status: <b id="doneStatus">-</b></p>
+          </div>
+          <button class="btn-primary btn-block" onclick="startNewOrder()">Back to Stalls</button>
         </div>
 
-        <div class="yz-actions">
-          <button class="secondary" onclick="loadHistory()">View Order History</button>
-          <button onclick="yzStartNewOrder()">Start New Order</button>
+      </div>
+
+      <!-- ORDER HISTORY -->
+      <div class="cust-page" id="cust-page-orders">
+        <div id="orderHistoryList"></div>
+      </div>
+
+      <!-- ACCOUNT -->
+      <div class="cust-page" id="cust-page-account">
+        <div class="card">
+          <h3>My Profile</h3>
+          <label>Name</label>
+          <input id="profileName" type="text">
+          <label>Email</label>
+          <input id="profileEmail" type="email">
+          <label>Phone</label>
+          <input id="profilePhone" type="text" maxlength="8">
+          <button class="btn-primary" onclick="saveCustomerProfile()">Save Changes</button>
+          <div id="profileStatus"></div>
+        </div>
+        <button class="btn-secondary btn-block" onclick="customerLogout()">Logout</button>
+      </div>
+
+    </main>
+
+    <nav class="cust-bottom-nav">
+      <div class="cust-nav-item active" data-page="home" onclick="custNav('home')"><span>🏠</span>Home</div>
+      <div class="cust-nav-item" data-page="cart" onclick="custNav('cart')"><span>🛒</span>Cart</div>
+      <div class="cust-nav-item" data-page="orders" onclick="custNav('orders')"><span>🧾</span>Orders</div>
+      <div class="cust-nav-item" data-page="account" onclick="custNav('account')"><span>👤</span>Account</div>
+    </nav>
+  </div>
+
+  <!-- ITEM DETAIL MODAL -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeItemModal()">✕</button>
+      <div id="itemModalImage" class="modal-image"></div>
+      <div class="modal-body">
+        <h2 id="itemModalName"></h2>
+        <p class="modal-price" id="itemModalPrice"></p>
+        <p class="muted" id="itemModalDescription"></p>
+
+        <label>Special requests (optional)</label>
+        <textarea id="itemModalNotes" placeholder="e.g. less spicy, no onions..."></textarea>
+
+        <div class="modal-row">
+          <div class="qty-stepper">
+            <button onclick="modalQtyChange(-1)">−</button>
+            <span id="itemModalQty">1</span>
+            <button onclick="modalQtyChange(1)">+</button>
+          </div>
+          <button class="heart-btn" id="itemModalHeart" onclick="toggleLikeFromModal()">🤍</button>
         </div>
 
-        <div id="historyList" class="muted" style="margin-top:12px;"></div>
+        <button class="btn-primary btn-block" onclick="confirmAddToCart()">Add to Cart</button>
+        <div id="itemModalStatus"></div>
       </div>
-
-      <div id="apiLog" class="api-log" style="margin-top:16px;">Waiting for an action...</div>
-
-      <input id="paymentOrderId" type="hidden" />
-      <input id="statusOrderId" type="hidden" />
-      <div id="statusResult" style="display:none;"></div>
     </div>
-<!-- ZIYING CUSTOMER FEATURES -->
-<div class="card">
-  <h2>
-    Customer Account & Discovery
-    <span class="badge">Ziying</span>
-  </h2>
+  </div>
+</div>
 
-  <p class="muted">
-    Customer registration, login, stall browsing and menu discovery features.
-  </p>
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: STALL OWNER APP
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-owner-app">
+  <div class="dash-shell">
+    <nav class="dash-sidebar">
+      <div class="dash-logo"><span class="dash-logo-badge">🍜</span> Hawker Centre</div>
 
-  <div class="flow-steps">
+      <div class="dash-nav-section">Stall Owner</div>
+      <div class="dash-nav-item active" data-owner-page="overview" onclick="ownerNav('overview')"><span>📊</span>Overview</div>
+      <div class="dash-nav-item" data-owner-page="hygiene" onclick="ownerNav('hygiene')"><span>🏅</span>Hygiene Grade</div>
+      <div class="dash-nav-item" data-owner-page="feedback" onclick="ownerNav('feedback')"><span>⭐</span>Feedback</div>
+      <div class="dash-nav-item" data-owner-page="complaints" onclick="ownerNav('complaints')"><span>📋</span>Complaints</div>
+      <div class="dash-nav-item" data-owner-page="menu" onclick="ownerNav('menu')"><span>🍽️</span>Menu & Stall</div>
 
-    <!-- Registration and Login -->
-    <div class="flow-step">
-      <h3>1. Registration & Login</h3>
-
-      <div class="endpoint">
-        POST /auth/customer/register<br>
-        POST /auth/customer/login
+      <div class="dash-nav-bottom">
+        <div class="dash-nav-item" onclick="ownerLogout()"><span>🚪</span>Logout</div>
       </div>
-
-      <p class="muted">
-        Customers can create an account and securely log in.
-      </p>
-
-      <button class="small" onclick="openCustomerAccount()">
-        Open Account
-      </button>
-    </div>
-
-    <!-- Browse Stalls -->
-    <div class="flow-step">
-      <h3>2. Browse Stalls</h3>
-
-      <div class="endpoint">
-        GET /catalog/customer/stalls
-      </div>
-
-      <p class="muted">
-        View available stalls, cuisine types, operating hours and hygiene grades.
-      </p>
-
-      <button class="small" onclick="openCustomerBrowse()">
-        Browse Stalls
-      </button>
-    </div>
-
-    <!-- Browse Menu Items -->
-    <div class="flow-step">
-      <h3>3. Browse Menu Items</h3>
-
-      <div class="endpoint">
-        GET /catalog/customer/stalls/:stallId/menu
-      </div>
-
-      <p class="muted">
-        Select a stall to view its available food items, prices and descriptions.
-      </p>
-
-      <button class="small" onclick="openCustomerBrowse()">
-        Browse Menu
-      </button>
-    </div>
-
-  </div>
-
-  <div class="summary-grid">
-
-    <div class="summary-box">
-
-  <h3 style="margin-top:0;">👤 Customer Portal</h3>
-
-  <p class="muted">
-    Welcome to your customer portal.
-    You can browse stalls, browse menus and manage your profile.
-  </p>
-
-  <div class="flow-actions">
-
-    <button
-      class="small"
-      onclick="openCustomerBrowse()">
-      Browse Stalls
-    </button>
-
-    <button
-      class="small"
-      onclick="openCustomerBrowse()">
-      Browse Menu
-    </button>
-
-    <button
-      class="small secondary"
-      onclick="loadCustomerProfile()">
-      My Profile
-    </button>
-
-  </div>
-
-</div>
-
-  </div>
-<!-----------------------------------ZIYING --------------------------->
-<div id="ziyingFeatureStatus" class="status ok" style="margin-top:12px;">
-  Customer authentication and catalog APIs are connected successfully.
-</div>
-
-</div>
-<!-- END OF ZIYING CUSTOMER FEATURES -->
-
-
-<!-- ZIYING CUSTOMER PROFILE -->
-<div class="card" id="customerProfileCard" style="display:none;">
-
-  <h2>
-    👤 My Profile
-    <span class="badge">Ziying</span>
-  </h2>
-
-  <div class="row">
-    <div>
-      <label for="profileName">Name</label>
-      <input id="profileName" type="text">
-    </div>
-
-    <div>
-      <label for="profileEmail">Email</label>
-      <input id="profileEmail" type="email">
-    </div>
-  </div>
-
-  <div class="row">
-    <div>
-      <label for="profilePhone">Phone</label>
-      <input id="profilePhone" type="text" maxlength="8">
-    </div>
-
-    <div>
-      <label for="profileCreated">Member Since</label>
-      <input id="profileCreated" type="text" disabled>
-    </div>
-  </div>
-
-  <div class="flow-actions">
-    <button onclick="saveCustomerProfile()">
-      Save Changes
-    </button>
-
-    <button
-      class="secondary"
-      onclick="closeCustomerProfile()"
-    >
-      Close
-    </button>
-  </div>
-
-  <div id="profileStatus"></div>
-
-</div>
-<!-- END OF ZIYING CUSTOMER PROFILE -->
-
-
-<!-- STALL OWNER FEATURES -->
-<div class="card">
-
-  <h2>🏪 Stall Owner Management</h2>
-
-  <div class="row">
-    <button onclick="loadProfile()">Load Profile</button>
-    <button onclick="loadMenu()">Menu</button>
-    <button onclick="loadPromotions()">Promotions</button>
-    <button onclick="loadIncomingOrders()">Incoming Orders</button>
-  </div>
-
-  <hr>
-
-  <div id="ownerContent">
-    <p class="muted">
-      Select one of the options above.
-    </p>
-  </div>
-
-</div>
-  </div>
-
-</div>
-
-<script>
-const API = "http://localhost:3000";
-let token = localStorage.getItem("token") || null;
-let customerId = localStorage.getItem("customer_id") || null;
-let customerName = localStorage.getItem("customer_name") || null;
-let officer_token = localStorage.getItem("officer_token") || null;
-let officerName = localStorage.getItem("officer_name") || null;
-let officerId = localStorage.getItem("officer_id") || null;
-let selectedStallId = null;
-let selectedStallName = null;
-let gradeHistory = [];
-
-function switchTab(name) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-
-  const tab = document.querySelector(`.tab[onclick="switchTab('${name}')"]`);
-  const panel = document.getElementById(`panel-${name}`);
-
-  if (!tab || !panel) {
-    console.error(`Missing tab or panel for: ${name}`);
-    return;
-  }
-
-  tab.classList.add("active");
-  panel.classList.add("active");
-}
-
-function showStatus(elId, message, ok) {
-  const el = document.getElementById(elId);
-  el.className = "status " + (ok ? "ok" : "err");
-  el.textContent = message;
-}
-
-// ─── ZIYING CUSTOMER FEATURE NAVIGATION ─────────────────────────────────────
-
-function openCustomerAccount() {
-  switchTab("account");
-}
-
-function openCustomerBrowse() {
-  switchTab("browse");
-
-  document.getElementById("stallSelect").focus();
-}
-
-async function refreshCustomerFeatures() {
-  switchTab("browse");
-
-  await loadStalls();
-
-  const status = document.getElementById("ziyingFeatureStatus");
-
-  if (status) {
-    status.className = "status ok";
-    status.textContent =
-      "Customer main page opened and stalls refreshed successfully.";
-  }
-}
-
-async function loadCustomerProfile() {
-
-  if (!token) {
-    alert("Please log in first.");
-    switchTab("account");
-    return;
-  }
-
-  try {
-
-    const res = await fetch(`${API}/profile/customer`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error);
-    }
-
-    document.getElementById("customerProfileCard").style.display = "block";
-
-    document.getElementById("profileName").value =
-      data.customer.name;
-
-    document.getElementById("profileEmail").value =
-      data.customer.email;
-
-    document.getElementById("profilePhone").value =
-      data.customer.phone;
-
-    document.getElementById("profileCreated").value =
-      new Date(data.customer.created_at).toLocaleDateString();
-
-  }
-  catch(err){
-
-    alert(err.message);
-
-  }
-
-}
-
-function closeCustomerProfile(){
-
-    document.getElementById("customerProfileCard").style.display = "none";
-
-}
-
-async function saveCustomerProfile(){
-
-    const name =
-    document.getElementById("profileName").value.trim();
-
-    const email =
-    document.getElementById("profileEmail").value.trim();
-
-    const phone =
-    document.getElementById("profilePhone").value.trim();
-
-    try{
-
-        const res = await fetch(`${API}/profile/customer`,{
-
-            method:"PUT",
-
-            headers:{
-                "Content-Type":"application/json",
-                Authorization:`Bearer ${token}`
-            },
-
-            body:JSON.stringify({
-                name,
-                email,
-                phone
-            })
-
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            console.log(data);   // See the full response in the browser console
-
-            if (data.details) {
-                throw new Error(data.details.join(", "));
-           }
-
-            throw new Error(data.error);
-        }
-
-        await loadCustomerProfile();
-
-        showStatus(
-            "profileStatus",
-            "Profile updated successfully!",
-            true
-        );
-
-        setTimeout(() => {
-            document.getElementById("profileStatus").innerHTML = "";
-        }, 3000);
-
-    }
-    catch(err){
-
-        showStatus(
-            "profileStatus",
-            err.message,
-            false
-        );
-
-    }
-
-}
-
-async function loadProfile(){
-
-document.getElementById("ownerContent").innerHTML=`
-
-<h3>Manage Stall Profile</h3>
-
-<p>This page will load your stall profile.</p>
-
-<button onclick="alert('Profile loaded')">
-
-Load Profile
-
-</button>
-
-`;
-
-}
-
-//Manage Menu Items
-async function loadMenu() {
-
-document.getElementById("ownerContent").innerHTML = `
-
-<h3>Menu Management</h3>
-
-<div class="card">
-
-<div class="row">
-    <div>
-        <label>Item Name</label>
-        <input type="text" id="menuName" placeholder="Enter item name">
-    </div>
-
-    <div>
-        <label>Price ($)</label>
-        <input type="number" id="menuPrice" step="0.01" placeholder="0.00">
-    </div>
-</div>
-
-<label>Description</label>
-<textarea
-    id="menuDescription"
-    placeholder="Enter description">
-</textarea>
-
-<label>Availability</label>
-
-<select id="menuAvailable">
-    <option value="true">Available</option>
-    <option value="false">Unavailable</option>
-</select>
-
-<br><br>
-
-<button onclick="saveMenuItem()">
-    ➕ Add Menu Item
-</button>
-
-<hr>
-
-<h3>Current Menu Items</h3>
-
-<div id="menuTable">
-
-<div class="placeholder">
-
-Loading menu items...
-
-</div>
-
-</div>
-
-</div>
-
-`;
-
-loadOwnerMenu();
-
-}
-
-async function loadOwnerMenu() {
-
-    const stallId = 1;
-
-    const table = document.getElementById("menuTable");
-
-    try {
-
-        const res = await fetch(`${API}/menu/stall/${stallId}`);
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to load menu.");
-        }
-
-        const menuItems = data.data;
-
-        if (!menuItems || menuItems.length === 0) {
-            table.innerHTML = `
-                <div class="placeholder">
-                    No menu items found.
-                </div>
-            `;
-            return;
-        }
-
-        table.innerHTML = "";
-
-        menuItems.forEach(item => {
-
-            table.innerHTML += `
-                <div class="menu-item">
-
-                    <div>
-
-                        <strong>${item.item_name}</strong><br>
-
-                        <span class="muted">
-                            ${item.description || ""}
-                        </span><br>
-
-                        <span class="badge">
-                            $${Number(item.price).toFixed(2)}
-                        </span>
-
-                    </div>
-
-                    <div>
-
-                        <button
-                            class="small"
-                            onclick="editMenuItem(${item.item_id})">
-
-                            Edit
-
-                        </button>
-
-                        <button
-                            class="small secondary"
-                            onclick="deleteMenuItem(${item.item_id})">
-
-                            Delete
-
-                        </button>
-
-                    </div>
-
-                </div>
-            `;
-
-        });
-
-    } catch (err) {
-
-        table.innerHTML = `
-            <div class="status err">
-                ${err.message}
+    </nav>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1 id="ownerPageTitle">Overview</h1>
+        <div class="dash-user-chip"><span class="dot"></span><span id="ownerChipName">-</span></div>
+      </header>
+
+      <div class="dash-content">
+
+        <div class="dash-page active" id="owner-page-overview">
+          <div class="stat-grid" id="ownerOverviewStats"></div>
+          <div class="dash-grid-2">
+            <div class="card">
+              <h3>Recent Feedback</h3>
+              <div id="ownerOverviewFeedback"></div>
             </div>
-        `;
+            <div class="card">
+              <h3>Open Complaints</h3>
+              <div id="ownerOverviewComplaints"></div>
+            </div>
+          </div>
+        </div>
 
-    }
+        <div class="dash-page" id="owner-page-hygiene">
+          <div id="ownerStallSelectWrap" style="display:none;">
+            <label>Stall</label>
+            <select id="ownerStallSelect" onchange="loadOwnerHygiene()"></select>
+          </div>
+          <div class="card">
+            <h3>Current Grade</h3>
+            <div id="ownerCurrentGrade" class="placeholder">Loading...</div>
+          </div>
+          <div class="card">
+            <h3>Grade History</h3>
+            <div id="ownerGradeHistory"></div>
+          </div>
+        </div>
 
-}
+        <div class="dash-page" id="owner-page-feedback">
+          <div class="row-2">
+            <div><label>From</label><input id="ownerFeedbackFrom" type="date" onchange="loadOwnerFeedback()"></div>
+            <div><label>To</label><input id="ownerFeedbackTo" type="date" onchange="loadOwnerFeedback()"></div>
+          </div>
+          <div id="ownerFeedbackList"></div>
+        </div>
 
-async function deleteMenuItem(itemId) {
+        <div class="dash-page" id="owner-page-complaints">
+          <div class="row-2">
+            <div><label>From</label><input id="ownerComplaintsFrom" type="date" onchange="loadOwnerComplaints()"></div>
+            <div><label>To</label><input id="ownerComplaintsTo" type="date" onchange="loadOwnerComplaints()"></div>
+          </div>
+          <select id="ownerComplaintStatusFilter" onchange="loadOwnerComplaints()" style="max-width:220px;">
+            <option value="">All statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+          <div id="ownerComplaintsListFull"></div>
+        </div>
 
-    if (!confirm("Are you sure you want to delete this menu item?")) {
-        return;
-    }
+        <div class="dash-page" id="owner-page-menu">
+          <div class="card">
+            <h3 id="menuFormTitle">Add Menu Item</h3>
+            <div class="row-2">
+              <div>
+                <label>Item Name</label>
+                <input type="text" id="menuName" placeholder="e.g. Chicken Rice">
+              </div>
+              <div>
+                <label>Price ($)</label>
+                <input type="number" id="menuPrice" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+            <label>Description</label>
+            <textarea id="menuDescription" placeholder="Short description"></textarea>
+            <label>Image URL <span class="muted">(see note below on adding your own photos)</span></label>
+            <input type="text" id="menuImageUrl" placeholder="images/chicken-rice.jpg" />
+            <label>Availability</label>
+            <select id="menuAvailable">
+              <option value="true">Available</option>
+              <option value="false">Unavailable</option>
+            </select>
+            <button class="btn-primary" onclick="saveMenuItem()">➕ Add Menu Item</button>
+            <p class="muted" style="margin-top:10px;">
+              To use your own food photos: drop image files into a <code>Frontend/images/</code> folder in
+              the project, then enter a relative path above like <code>images/chicken-rice.jpg</code>.
+              A full URL (e.g. an image already hosted online) also works.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Current Menu Items</h3>
+            <div id="menuTable"></div>
+          </div>
+        </div>
 
-    try {
-
-        const res = await fetch(`${API}/menu/${itemId}`, {
-            method: "DELETE"
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to delete menu item.");
-        }
-
-        alert("Menu item deleted successfully.");
-
-        loadOwnerMenu();
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
-
-}
-
-async function editMenuItem(itemId) {
-
-    try {
-
-        const res = await fetch(`${API}/menu/${itemId}`);
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to load menu item.");
-        }
-
-        const item = data.data;
-
-        editingMenuId = itemId;
-
-        document.getElementById("menuName").value = item.item_name;
-        document.getElementById("menuPrice").value = item.price;
-        document.getElementById("menuDescription").value = item.description || "";
-        document.getElementById("menuAvailable").value = item.is_available ? "true" : "false";
-
-        document.querySelector("button[onclick='saveMenuItem()']").innerText = "💾 Update Menu Item";
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
-
-}
-
-async function saveMenuItem() {
-
-    const itemName = document.getElementById("menuName").value.trim();
-    const price = document.getElementById("menuPrice").value;
-    const description = document.getElementById("menuDescription").value.trim();
-    const isAvailable = document.getElementById("menuAvailable").value === "true";
-
-    if (!itemName || !price) {
-        alert("Please enter the item name and price.");
-        return;
-    }
-
-    try {
-
-        const url = editingMenuId
-          ? `${API}/menu/${editingMenuId}`
-          : `${API}/menu`;
-
-        const method = editingMenuId ? "PUT" : "POST";
-
-        const res = await fetch(url, {
-          method,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                stall_id: 1,
-                item_name: itemName,
-                description: description,
-                price: Number(price),
-                is_available: isAvailable,
-                image_url: null
-            })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Unable to add menu item.");
-        }
-
-        alert("Menu item added successfully!");
-
-        document.getElementById("menuName").value = "";
-        document.getElementById("menuPrice").value = "";
-        document.getElementById("menuDescription").value = "";
-        document.getElementById("menuAvailable").value = "true";
-        editingMenuId = null;
-
-        document.querySelector("button[onclick='saveMenuItem()']").innerText =
-    "➕ Add Menu Item";
-        loadOwnerMenu();
-
-    } catch (err) {
-
-        alert(err.message);
-
-    }
-
-}
-
-async function loadPromotions(){
-
-document.getElementById("ownerContent").innerHTML=`
-
-<h3>Promotions</h3>
-
-<button onclick="alert('Create Promotion')">
-
-Create Promotion
-
-</button>
-
-<div class="placeholder">
-
-Promotions will appear here.
-
+      </div>
+    </div>
+  </div>
 </div>
 
-`;
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: NEA OFFICER APP
+═══════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-officer-app">
+  <div class="dash-shell">
+    <nav class="dash-sidebar">
+      <div class="dash-logo"><span class="dash-logo-badge">🍜</span> Hawker Centre</div>
 
-}
+      <div class="dash-nav-section">NEA Officer</div>
+      <div class="dash-nav-item active" data-officer-page="inspections" onclick="officerNav('inspections')"><span>🔍</span>Inspections</div>
 
-async function loadIncomingOrders(){
+      <div class="dash-nav-bottom">
+        <div class="dash-nav-item" onclick="officerLogout()"><span>🚪</span>Logout</div>
+      </div>
+    </nav>
 
-document.getElementById("ownerContent").innerHTML=`
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <h1>Inspections</h1>
+        <div class="dash-user-chip"><span class="dot"></span><span id="officerChipName">-</span></div>
+      </header>
 
-<h3>Incoming Orders</h3>
-
-<button onclick="alert('Refresh Orders')">
-
-Refresh
-
-</button>
-
-<div class="placeholder">
-
-Incoming orders will appear here.
-
+      <div class="dash-content">
+        <div class="dash-page active" id="officer-page-inspections">
+          <div class="row-2" style="margin-bottom:12px;">
+            <button class="btn-secondary" onclick="toggleInspectionHistory()">View History</button>
+            <button class="btn-primary" onclick="toggleAddInspection()">Add Inspection</button>
+          </div>
+          <div id="inspectionHistory" style="display:none;"></div>
+          <div class="card" id="addInspectionPanel" style="display:none;">
+            <h3>Add Inspection</h3>
+            <select id="inspectionStall"><option value="">-- Select a stall --</option></select>
+            <input id="inspectionScore" type="number" placeholder="Score (0-100)" min="0" max="100" step="1">
+            <textarea id="inspectionRemarks" placeholder="Remarks"></textarea>
+            <button class="btn-primary" onclick="submitInspection()">Submit Inspection</button>
+            <div id="inspectionStatus"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-`;
-
-}
-function updateSessionUI() {
-  document.getElementById("sessionCard").style.display = (token || officer_token) ? "block" : "none";
-  document.getElementById("authCard").style.display = (token || officer_token) ? "none" : "block";
-  if (token) {
-    document.getElementById("sessionName").textContent = customerName;
-    document.getElementById("sessionId").textContent = customerId;
-  }
-  else if (officer_token) {
-    document.getElementById("sessionName").textContent = officerName;
-    document.getElementById("sessionId").textContent = "Officer";
-  }
-}
-
-// ─── AUTH ────────────────────────────────────────────────────────────────────
-
-async function register() {
-  const name = document.getElementById("authName").value;
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPassword").value;
-  try {
-    const res = await fetch(`${API}/auth/customer/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = await res.json();
-    showStatus("authStatus", res.ok ? "Registered! Now log in." : data.message, res.ok);
-  } catch (err) {
-    showStatus("authStatus", "Network error: " + err.message, false);
-  }
-}
-
-async function login() {
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPassword").value;
-  try {
-    const res = await fetch(`${API}/auth/customer/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      token = data.token;
-      customerId = data.data.customer_id;
-      customerName = data.data.name;
-      localStorage.setItem("token", token);
-      localStorage.setItem("customer_id", customerId);
-      localStorage.setItem("customer_name", customerName);
-      showStatus("authStatus", "Login successful!", true);
-      updateSessionUI();
-    } else {
-      showStatus("authStatus", data.message, false);
-    }
-  } catch (err) {
-    showStatus("authStatus", "Network error: " + err.message, false);
-  }
-}
-
-function logout() {
-  token = null; customerId = null; customerName = null;
-  localStorage.removeItem("officer_token");
-  localStorage.removeItem("officer_name");
-  localStorage.removeItem("officer_id");
-
-  officer_token = null;
-  officerName = null;
-  officerId = null;
-
-  hideOperatorTab();
-  // localStorage.clear();
-  localStorage.removeItem("token");
-  localStorage.removeItem("customer_id");
-  localStorage.removeItem("customer_name");
-  updateSessionUI();
-}
-
-// ─── STALLS & MENU ───────────────────────────────────────────────────────────
-
-async function loadStalls() {
-  try {
-    const res = await fetch(`${API}/catalog/stalls`);
-    const stalls = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        stalls.error || "Unable to load stalls."
-      );
-    }
-
-    const select = document.getElementById("stallSelect");
-
-    select.innerHTML =
-      '<option value="">-- Select a stall --</option>';
-
-    stalls.forEach((stall) => {
-      const option = document.createElement("option");
-
-      option.value = stall.stall_id;
-      option.dataset.name = stall.stall_name;
-      option.textContent =
-        `${stall.stall_name} (${stall.cuisine_type || "N/A"})`;
-
-      select.appendChild(option);
-    });
-  } catch (err) {
-    console.error("LOAD STALLS ERROR:", err);
-
-    document.getElementById("menuList").innerHTML = `
-      <p class="status err">
-        Could not load stalls: ${err.message}
-      </p>
-    `;
-  }
-}
-
-async function onStallChange() {
-  const select = document.getElementById("stallSelect");
-  const stallId = select.value;
-  selectedStallId = stallId || null;
-  selectedStallName = stallId ? select.options[select.selectedIndex].dataset.name : null;
-
-  document.getElementById("feedbackStallLabel").textContent = selectedStallId
-    ? `Feedback for: ${selectedStallName}`
-    : "No stall selected.";
-
-  if (!stallId) {
-    document.getElementById("menuList").innerHTML = "";
-    document.getElementById("feedbackList").innerHTML = "Select a stall in the Browse tab to see feedback.";
-    document.getElementById("gradeSubtitle").textContent = "(Select a stall first)";
-    return;
-  }
-  await loadMenuItems(stallId);
-  await loadFeedback(stallId);
-  document.getElementById("gradeSubtitle").textContent = "";
-  await loadGrades(stallId);
-}
-
-async function loadMenuItems(stallId) {
-  try {
-    const res = await fetch(
-      `${API}/catalog/menu-items/${stallId}`
-    );
-
-    const items = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        items.error || "Unable to load menu items."
-      );
-    }
-
-    const container = document.getElementById("menuList");
-    container.innerHTML = "";
-
-    if (!Array.isArray(items) || items.length === 0) {
-      container.innerHTML =
-        '<p class="muted">No menu items for this stall yet.</p>';
-      return;
-    }
-
-    for (const item of items) {
-      let likeCount = 0;
-
-      try {
-        const likeRes = await fetch(
-          `${API}/likes/item/${item.item_id}`
-        );
-
-        const likeData = await likeRes.json();
-        likeCount = likeData.count || 0;
-      } catch (err) {
-        console.error("Unable to load like count:", err);
-      }
-
-      const div = document.createElement("div");
-      div.className = "menu-item";
-
-      div.innerHTML = `
-        <span>
-          ${item.item_name}
-          - $${Number(item.price).toFixed(2)}
-        </span>
-
-        <span>
-          <span class="muted">
-            ${likeCount} like(s)
-          </span>
-
-          <button
-            class="small"
-            onclick="addToCart(${item.item_id})">
-            Add to Cart
-          </button>
-
-          <button
-            class="small"
-            onclick="likeItem(${item.item_id})">
-            Like
-          </button>
-
-          <button
-            class="small secondary"
-            onclick="unlikeItem(${item.item_id})">
-            Unlike
-          </button>
-        </span>
-      `;
-
-      container.appendChild(div);
-    }
-  } catch (err) {
-    console.error("LOAD MENU ERROR:", err);
-
-    document.getElementById("menuList").innerHTML = `
-      <p class="status err">
-        Could not load menu: ${err.message}
-      </p>
-    `;
-  }
-}
-
-// ─── LIKES (SA-38) ───────────────────────────────────────────────────────────
-
-async function likeItem(itemId) {
-  if (!token) return alert("Please log in first (Account tab).");
-
-  try {
-    const res = await fetch(`${API}/likes`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ item_id: itemId }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Unable to like this item.");
-    }
-
-    alert(data.message || "Item liked");
-    await loadMenuItems(selectedStallId);
-  } catch (err) {
-    alert(err.message || "Unable to like this item.");
-  }
-}
-
-async function submitFeedback() {
-  if (!token) {
-    return showStatus(
-      "feedbackStatus",
-      "Please log in first (Account tab).",
-      false
-    );
-  }
-
-  if (!selectedStallId) {
-    return showStatus(
-      "feedbackStatus",
-      "Please select a stall in the Browse tab first.",
-      false
-    );
-  }
-
-  const rating = parseInt(
-    document.getElementById("feedbackRating").value
-  );
-
-  const comment = document
-    .getElementById("feedbackComment")
-    .value
-    .trim();
-
-  if (!comment) {
-    return showStatus(
-      "feedbackStatus",
-      "Please enter a feedback comment.",
-      false
-    );
-  }
-
-  try {
-    const res = await fetch(`${API}/feedback`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        stall_id: parseInt(selectedStallId),
-        rating,
-        comment,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Unable to submit feedback.");
-    }
-
-    showStatus("feedbackStatus", "Feedback submitted!", true);
-    document.getElementById("feedbackComment").value = "";
-    await loadFeedback(selectedStallId);
-  } catch (err) {
-    showStatus(
-      "feedbackStatus",
-      err.message || "Unable to submit feedback.",
-      false
-    );
-  }
-}
-
-async function loadFeedback(stallId) {
-  try {
-    const res = await fetch(`${API}/feedback/stall/${stallId}`);
-    const feedbackList = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        feedbackList.error || "Unable to load feedback."
-      );
-    }
-
-    const container = document.getElementById("feedbackList");
-
-    if (!feedbackList || feedbackList.length === 0) {
-      container.innerHTML =
-        '<p class="muted">No feedback yet for this stall.</p>';
-      return;
-    }
-
-    container.innerHTML = "";
-
-    feedbackList.forEach((f) => {
-      const div = document.createElement("div");
-      div.className = "feedback-entry";
-
-      div.innerHTML = `
-        <span class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
-        <b>${f.customer_name}</b>
-        <p style="margin:4px 0;">${f.comment}</p>
-        <span class="muted">${new Date(f.created_at).toLocaleString()}</span>
-      `;
-
-      container.appendChild(div);
-    });
-  } catch (err) {
-    document.getElementById("feedbackList").innerHTML =
-      `<p class="status err">Could not load feedback: ${err.message}</p>`;
-  }
-}
-
-async function unlikeItem(itemId) {
-  if (!token) {
-    return alert("Please log in first (Account tab).");
-  }
-
-  try {
-    const res = await fetch(`${API}/likes/${itemId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Unable to unlike this item.");
-    }
-
-    alert(data.message || "Item unliked");
-    await loadMenuItems(selectedStallId);
-  } catch (err) {
-    alert(err.message || "Unable to unlike this item.");
-  }
-}
-
-// ─── GRADES / OPERATOR (Weiye) ───────────────────────────────────────────────
-
-async function loadGrades(stallId) {
-  const currentDisplay = document.getElementById("currentGradeDisplay");
-  const history = document.getElementById("gradeHistory");
-  currentDisplay.innerHTML = "Loading...";
-  history.innerHTML = "Loading...";
-  try {
-    const inspectionRes = await fetch(`${API}/inspection`);
-    const inspections = await inspectionRes.json();
-    const gradeRes = await fetch(`${API}/grade`);
-    const grades = await gradeRes.json();
-
-    const inspectionMap = {};
-    inspections.forEach(i => { inspectionMap[i.inspection_id] = i; });
-
-    gradeHistory = grades.filter(g => {
-      const inspection = inspectionMap[g.inspection_id];
-      return inspection && inspection.stall_id == stallId;
-    }).map(g => ({
-      ...g,
-      inspection_date: inspectionMap[g.inspection_id].inspection_date
-    }));
-    gradeHistory.sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date));
-
-    if (gradeHistory.length === 0) {
-      currentDisplay.innerHTML = '<div class="placeholder">No hygiene grades yet.</div>';
-      history.innerHTML = "No grade history.";
-      return;
-    }
-
-    const current = gradeHistory[0];
-    const previous = gradeHistory[1];
-    const trend = getTrend(current.grade, previous ? previous.grade : null);
-    let trendColour = "#6b7280";
-    if (trend === "▲") trendColour = "#22c55e";
-    if (trend === "▼") trendColour = "#ef4444";
-    const gradeColours = { "A": "#ef4444", "B": "#22c55e", "C": "#92400e", "D": "#6b7280" };
-
-    currentDisplay.innerHTML = `
-      <div style="text-align:center;">
-        <div style="display:flex;justify-content:center;align-items:center;gap:18px;">
-          <span style="font-size:90px;font-weight:bold;color:${gradeColours[current.grade]}">${current.grade}</span>
-          <span style="font-size:55px;font-weight:bold;color:${trendColour}">${trend}</span>
-        </div>
-        <div class="muted">Valid until ${new Date(current.valid_until).toLocaleDateString()}</div>
-      </div>`;
-
-    history.innerHTML = "";
-    gradeHistory.forEach(g => {
-      const div = document.createElement("div");
-      div.className = "feedback-entry";
-      div.innerHTML = `
-        <span style="color:${gradeColours[g.grade]};font-weight:600;font-size:15px;">Grade ${g.grade}</span>
-        <p style="margin:4px 0;">Issued: ${new Date(g.issued_date).toLocaleDateString()}</p>
-        <span class="muted">Valid Until: ${new Date(g.valid_until).toLocaleDateString()}</span>`;
-      history.appendChild(div);
-    });
-  } catch (err) {
-    currentDisplay.innerHTML = '<div class="placeholder">Could not load grade data.</div>';
-    history.innerHTML = "";
-  }
-}
-
-async function loadInspectionHistory() {
-  const res = await fetch(`${API}/inspection`);
-  if (!res.ok) {
-    document.getElementById("inspectionHistory").innerHTML = "Unable to load inspection history.";
-    return;
-  }
-
-  const inspections = await res.json();
-
-  inspections.sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date));
-
-  let html = "";
-
-  inspections.forEach(i => {
-    html += `
-      <div class="feedback-entry">
-        <b>Inspection #${i.inspection_id}</b>
-        <p><b>Stall:</b> ${i.stall_name ?? i.stall_id}</p>
-        <p><b>Officer:</b> ${i.officer_name ?? i.officer_id}</p>
-        <p><b>Score:</b> ${i.score}${i.grade ? ` (${i.grade})` : ""}</p>
-        <p><b>Remarks:</b> ${i.remarks || "None"}</p>
-        <p><b>Inspection Date:</b> ${new Date(i.inspection_date).toLocaleDateString()}</p>
-      </div>
-    `;
-  });
-
-  document.getElementById("inspectionHistory").innerHTML = html;
-}
-
-function toggleInspectionHistory() {
-  const history = document.getElementById("inspectionHistory");
-  const panel = document.getElementById("addInspectionPanel");
-  panel.style.display = "none";
-  if (history.style.display === "none") {
-    history.style.display = "block";
-    loadInspectionHistory();
-  } else {
-    history.style.display = "none";
-  }
-}
-
-function toggleAddInspection() {
-  const history = document.getElementById("inspectionHistory");
-  const panel = document.getElementById("addInspectionPanel");
-  history.style.display = "none";
-  if (panel.style.display === "none") {
-    panel.style.display = "block";
-    loadInspectionStalls();
-  }
-  else {
-    panel.style.display = "none";
-  }
-}
-
-async function loadInspectionStalls() {
-  const res = await fetch(`${API}/catalog/stalls`);
-  if (!res.ok) {return;}
-  const stalls = await res.json();
-  const select = document.getElementById("inspectionStall");
-  select.innerHTML ='<option value="">-- Select a stall --</option>';
-  stalls.forEach(stall => {
-    select.innerHTML += `
-      <option value="${stall.stall_id}">
-        ${stall.stall_name}
-      </option>
-    `;
-  });
-}
-
-async function submitInspection() {
-  const scoreInput = document.getElementById("inspectionScore");
-  const score = Number(scoreInput.value);
-  if (
-      scoreInput.value.trim() === "" ||
-      !Number.isInteger(score) ||
-      score < 0 ||
-      score > 100
-  ) {
-      showStatus(
-          "inspectionStatus",
-          "Score must be an integer from 0 to 100.",
-          false
-      );
-      return;
-  }
-  document.getElementById("inspectionStatus").innerHTML = "";
-  const stall_id = document.getElementById("inspectionStall").value;
-  const remarks = document.getElementById("inspectionRemarks").value;
-  try {
-    const res = await fetch(`${API}/inspection`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${officer_token}`
-      },
-      body: JSON.stringify({
-        stall_id: Number(stall_id),
-        officer_id: Number(officerId),
-        score: score,
-        remarks
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      const errorMsg =
-        data.message ||
-        data.error ||
-        (Array.isArray(data.details)
-          ? data.details.join(", ")
-          : null) ||
-        "Unable to create inspection.";
-
-      showStatus("inspectionStatus", errorMsg, false);
-      return;
-    }
-    showStatus(
-      "inspectionStatus",
-      "Inspection created successfully!",
-      true
-    );
-    document.getElementById("inspectionRemarks").value = "";
-    document.getElementById("inspectionScore").value = "";
-    document.getElementById("addInspectionPanel").style.display = "none";
-    document.getElementById("inspectionHistory").style.display = "block";
-    loadInspectionHistory();
-    if (selectedStallId) {
-        await loadGrades(selectedStallId);
-    }
-  } catch (err) {
-    showStatus(
-      "inspectionStatus",
-      "Network error: " + err.message,
-      false
-    );
-  }
-}
-
-function gradeValue(grade) {
-  switch (grade) { case "A": return 4; case "B": return 3; case "C": return 2; case "D": return 1; default: return 0; }
-}
-
-function getTrend(current, last) {
-  if (!last) return "=";
-  const c = gradeValue(current), p = gradeValue(last);
-  if (c > p) return "▲";
-  if (c < p) return "▼";
-  return "=";
-}
-
-async function officerLogin(){
-  try{
-    const email = document.getElementById("authEmail").value;
-    const password = document.getElementById("authPassword").value;
-    const res = await fetch(`${API}/auth/officer/login`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({email,password})
-      }
-    );
-    const data = await res.json();
-    if(res.ok) {
-      officer_token = data.token;
-      officerName = data.data.name;
-      officerId = data.data.officer_id;
-
-      localStorage.setItem("officer_token", officer_token);
-      localStorage.setItem("officer_name", officerName);
-      localStorage.setItem("officer_id", officerId);
-
-      showOperatorTab();
-      updateSessionUI();
-      showStatus("authStatus","Officer login successful!",true);
-    }
-    else {
-        showStatus("authStatus",data.message,false);
-    }
-  }
-  catch(err){
-    showStatus("authStatus", err.message, false);
-  }
-}
-
-function showOperatorTab(){
-    document.getElementById("operatorTab").style.display="block";
-}
-
-function hideOperatorTab(){
-    document.getElementById("operatorTab").style.display="none";
-}
-
-// ─── ORDER MANAGEMENT (Yuzhen) ───────────────────────────────────────────────
-
-let yzCurrentOrderId = Number(localStorage.getItem("latestOrderId")) || null;
-let yzCurrentOrderTotal = Number(localStorage.getItem("latestOrderTotal")) || 0;
-
-function logApi(method, endpoint, payload, response, ok) {
-  const log = document.getElementById("apiLog");
-  if (!log) return;
-
-  const time = new Date().toLocaleTimeString();
-  const requestText = payload
-    ? `\nRequest: ${JSON.stringify(payload, null, 2)}`
-    : "";
-
-  log.textContent =
-    `[${time}] ${method} ${endpoint}` +
-    requestText +
-    `\nResponse: ${JSON.stringify(response, null, 2)}` +
-    `\nStatus: ${ok ? "SUCCESS" : "FAILED"}`;
-}
-
-function requireCustomer() {
-  if (!customerId) {
-    alert("Please log in first using the Account tab.");
-    switchTab("account");
-    return false;
-  }
-  return true;
-}
-
-function yzShowPage(page) {
-  document.querySelectorAll(".yz-order-page").forEach(el => {
-    el.classList.remove("active");
-  });
-
-  document.querySelectorAll(".yz-progress-step").forEach(el => {
-    el.classList.remove("active");
-  });
-
-  const map = {
-    cart: ["yzPageCart", "yzProgressCart"],
-    payment: ["yzPagePayment", "yzProgressPayment"],
-    complete: ["yzPageComplete", "yzProgressComplete"]
-  };
-
-  const target = map[page];
-  if (!target) return;
-
-  const pageElement = document.getElementById(target[0]);
-  const progressElement = document.getElementById(target[1]);
-
-  if (!pageElement || !progressElement) {
-    console.error(`Missing order page elements for: ${page}`);
-    return;
-  }
-
-  pageElement.classList.add("active");
-  progressElement.classList.add("active");
-}
-
-async function addToCart(itemId) {
-  if (!requireCustomer()) return;
-
-  const payload = {
-    customerId: Number(customerId),
-    itemId: Number(itemId),
-    quantity: 1
-  };
-
-  try {
-    const res = await fetch(`${API}/cart`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        data.error || data.details || "Unable to add item to cart."
-      );
-    }
-
-    logApi("POST", "/cart", payload, data, true);
-    alert(data.message || "Item added to cart.");
-
-    switchTab("other");
-    yzShowPage("cart");
-    await loadCart();
-  } catch (err) {
-    logApi("POST", "/cart", payload, { error: err.message }, false);
-    alert(err.message);
-  }
-}
-
-// =========================
-// LOAD CART
-// =========================
-
-async function loadCart() {
-  if (!requireCustomer()) {
-    return false;
-  }
-
-  const cartList =
-    document.getElementById("cartList");
-
-  const cartTotal =
-    document.getElementById("yzCartTotal");
-
-  const checkoutButton =
-    document.getElementById("yzCheckoutButton");
-
-  cartList.innerHTML =
-    '<p class="muted">Loading cart...</p>';
-
-  cartTotal.textContent = "";
-
-  if (checkoutButton) {
-    checkoutButton.disabled = true;
-    checkoutButton.textContent = "Checkout";
-  }
-
-  try {
-    const res = await fetch(
-      `${API}/cart/${customerId}`
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        data.details ||
-        data.error ||
-        "Unable to load cart."
-      );
-    }
-
-    if (!Array.isArray(data) || data.length === 0) {
-      cartList.innerHTML =
-        '<p class="muted">Your cart is empty.</p>';
-
-      cartTotal.textContent = "";
-
-      if (checkoutButton) {
-        checkoutButton.disabled = true;
-      }
-
-      return false;
-    }
-
-    let total = 0;
-
-    cartList.innerHTML = data.map(item => {
-      const itemPrice = Number(item.price);
-      const subtotal = Number(item.subtotal);
-
-      total += subtotal;
-
-      return `
-        <div class="yz-cart-item">
-
-          <div class="yz-cart-item-info">
-            <h3>${item.item_name}</h3>
-
-            <p class="muted">
-              ${item.stall_name || "Unknown Stall"}
-            </p>
-
-            <p>
-              $${itemPrice.toFixed(2)}
-              ×
-              ${item.quantity}
-            </p>
-          </div>
-
-          <div class="yz-cart-item-actions">
-
-            <p>
-              <strong>
-                $${subtotal.toFixed(2)}
-              </strong>
-            </p>
-
-            <button
-              class="danger"
-              onclick="removeCartItem(
-                ${item.cart_item_id},
-                this
-              )">
-              Remove
-            </button>
-
-          </div>
-
-        </div>
-      `;
-    }).join("");
-
-    cartTotal.innerHTML = `
-      <div class="yz-cart-total-row">
-        <strong>Total</strong>
-
-        <strong>
-          $${total.toFixed(2)}
-        </strong>
-      </div>
-    `;
-
-    if (checkoutButton) {
-      checkoutButton.disabled = false;
-      checkoutButton.textContent = "Checkout";
-    }
-
-    logApi(
-      "GET",
-      `/cart/${customerId}`,
-      null,
-      data,
-      true
-    );
-
-    return true;
-
-  } catch (err) {
-    cartList.innerHTML = `
-      <div class="status err">
-        ${err.message}
-      </div>
-    `;
-
-    cartTotal.textContent = "";
-
-    if (checkoutButton) {
-      checkoutButton.disabled = true;
-    }
-
-    logApi(
-      "GET",
-      `/cart/${customerId}`,
-      null,
-      { error: err.message },
-      false
-    );
-
-    return false;
-  }
-}
-
-// =========================
-// CHECKOUT
-// =========================
-
-async function yzCheckout(button) {
-  if (!requireCustomer()) {
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "Creating order...";
-
-  const payload = {
-    customerId: Number(customerId)
-  };
-
-  try {
-    const res = await fetch(
-      `${API}/orders/checkout`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        data.details ||
-        data.error ||
-        "Checkout failed."
-      );
-    }
-
-    yzCurrentOrderId =
-      Number(data.orderId);
-
-    yzCurrentOrderTotal =
-      Number(data.totalPrice);
-
-    localStorage.setItem(
-      "latestOrderId",
-      String(yzCurrentOrderId)
-    );
-
-    localStorage.setItem(
-      "latestOrderTotal",
-      String(yzCurrentOrderTotal)
-    );
-
-    const paymentOrderElement =
-      document.getElementById(
-        "yzPaymentOrderNumber"
-      );
-
-    if (paymentOrderElement) {
-      paymentOrderElement.textContent =
-        yzCurrentOrderId;
-    }
-
-    const paymentTotalElement =
-      document.getElementById(
-        "yzPaymentTotal"
-      );
-
-    if (paymentTotalElement) {
-      paymentTotalElement.textContent =
-        `$${yzCurrentOrderTotal.toFixed(2)}`;
-    }
-
-    const paymentOrderInput =
-      document.getElementById(
-        "paymentOrderId"
-      );
-
-    if (paymentOrderInput) {
-      paymentOrderInput.value =
-        yzCurrentOrderId;
-    }
-
-    const statusOrderInput =
-      document.getElementById(
-        "statusOrderId"
-      );
-
-    if (statusOrderInput) {
-      statusOrderInput.value =
-        yzCurrentOrderId;
-    }
-
-    document.getElementById(
-      "cartList"
-    ).innerHTML =
-      '<p class="muted">Your cart is empty.</p>';
-
-    document.getElementById(
-      "yzCartTotal"
-    ).textContent = "";
-
-    document.getElementById(
-      "checkoutStatus"
-    ).innerHTML = "";
-
-    logApi(
-      "POST",
-      "/orders/checkout",
-      payload,
-      data,
-      true
-    );
-
-    yzShowPage("payment");
-
-  } catch (err) {
-    showStatus(
-      "checkoutStatus",
-      err.message,
-      false
-    );
-
-    logApi(
-      "POST",
-      "/orders/checkout",
-      payload,
-      { error: err.message },
-      false
-    );
-
-    button.disabled = false;
-    button.textContent = "Checkout";
-  }
-}
-
-// =========================
-// REMOVE CART ITEM
-// =========================
-
-async function removeCartItem(
-  cartItemId,
-  button
-) {
-  const confirmed = confirm(
-    "Remove this item from your cart?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "Removing...";
-
-  try {
-    const res = await fetch(
-      `${API}/cart/${cartItemId}`,
-      {
-        method: "DELETE"
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        data.details ||
-        data.error ||
-        "Unable to remove item."
-      );
-    }
-
-    logApi(
-      "DELETE",
-      `/cart/${cartItemId}`,
-      null,
-      data,
-      true
-    );
-
-    await loadCart();
-
-  } catch (err) {
-    alert(err.message);
-
-    button.disabled = false;
-    button.textContent = "Remove";
-
-    logApi(
-      "DELETE",
-      `/cart/${cartItemId}`,
-      null,
-      { error: err.message },
-      false
-    );
-  }
-}
-
-async function makePayment() {
-  const orderId =
-    yzCurrentOrderId ||
-    Number(document.getElementById("paymentOrderId").value);
-
-  const paymentMethod =
-    document.getElementById("paymentMethod").value;
-
-  if (!orderId) {
-    showStatus(
-      "paymentStatus",
-      "Checkout and create an order first.",
-      false
-    );
-    return;
-  }
-
-  if (!paymentMethod) {
-    showStatus(
-      "paymentStatus",
-      "Select a payment method.",
-      false
-    );
-    return;
-  }
-
-  const payload = {
-    orderId,
-    paymentMethod
-  };
-
-  try {
-    const res = await fetch(`${API}/payment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        data.error || data.details || "Payment failed."
-      );
-    }
-
-    const status = await yzGetOrderStatus(orderId);
-
-    document.getElementById("yzCompleteOrderNumber").textContent =
-      orderId;
-
-    document.getElementById("yzCompletePaymentId").textContent =
-      data.paymentId ?? "-";
-
-    document.getElementById("yzCompletePaymentMethod").textContent =
-      paymentMethod;
-
-    document.getElementById("yzCompleteOrderStatus").textContent =
-      status || "Paid";
-
-    logApi("POST", "/payment", payload, data, true);
-    yzShowPage("complete");
-  } catch (err) {
-    logApi(
-      "POST",
-      "/payment",
-      payload,
-      { error: err.message },
-      false
-    );
-
-    showStatus("paymentStatus", err.message, false);
-  }
-}
-
-async function yzGetOrderStatus(orderId) {
-  try {
-    const res = await fetch(`${API}/orders/${orderId}/status`);
-    const data = await res.json();
-
-    if (!res.ok) return null;
-
-    const result = Array.isArray(data) ? data[0] : data;
-    return result.status || null;
-  } catch (_) {
-    return null;
-  }
-}
-
-async function loadHistoryFromCart() {
-  if (!requireCustomer()) return;
-
-  const container = document.getElementById("cartHistoryList");
-  if (!container) return;
-
-  if (container.dataset.open === "true") {
-    container.innerHTML = "";
-    container.dataset.open = "false";
-    return;
-  }
-
-  container.dataset.open = "true";
-  container.innerHTML =
-    '<p class="muted">Loading order history...</p>';
-
-  try {
-    const res = await fetch(
-      `${API}/orders/history/${customerId}`
-    );
-
-    const orders = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        orders.error ||
-        orders.details ||
-        "Unable to load order history."
-      );
-    }
-
-    logApi(
-      "GET",
-      `/orders/history/${customerId}`,
-      null,
-      orders,
-      true
-    );
-
-    if (!Array.isArray(orders) || orders.length === 0) {
-      container.innerHTML =
-        '<p class="muted">No orders found.</p>';
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="yz-summary">
-        <h3 style="margin-top:0;">Order History</h3>
-        ${orders.map(order => `
-          <div class="feedback-entry">
-            <b>Order #${order.order_id}</b>
-            <p style="margin:4px 0;">
-              Total: $${Number(order.total_price || 0).toFixed(2)}
-            </p>
-            <p style="margin:4px 0;">
-              Created: ${order.created_at
-                ? new Date(order.created_at).toLocaleString()
-                : "Not available"}
-            </p>
-            <span class="badge">${order.status || "Pending"}</span>
-          </div>
-        `).join("")}
-      </div>
-    `;
-  } catch (err) {
-    container.innerHTML =
-      `<div class="status err">${err.message}</div>`;
-
-    logApi(
-      "GET",
-      `/orders/history/${customerId}`,
-      null,
-      { error: err.message },
-      false
-    );
-  }
-}
-
-async function loadHistory() {
-  if (!requireCustomer()) return;
-
-  const container = document.getElementById("historyList");
-
-  container.innerHTML =
-    '<p class="muted">Loading order history...</p>';
-
-  try {
-    const res = await fetch(
-      `${API}/orders/history/${customerId}`
-    );
-
-    const orders = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        orders.error ||
-        orders.details ||
-        "Unable to load order history."
-      );
-    }
-
-    logApi(
-      "GET",
-      `/orders/history/${customerId}`,
-      null,
-      orders,
-      true
-    );
-
-    if (!Array.isArray(orders) || orders.length === 0) {
-      container.innerHTML =
-        '<p class="muted">No orders found.</p>';
-      return;
-    }
-
-    container.innerHTML = orders.map(order => `
-      <div class="feedback-entry">
-        <b>Order #${order.order_id}</b>
-        <p style="margin:4px 0;">
-          Total: $${Number(order.total_price || 0).toFixed(2)}
-        </p>
-        <span class="badge">${order.status}</span>
-      </div>
-    `).join("");
-  } catch (err) {
-    container.innerHTML =
-      `<div class="status err">${err.message}</div>`;
-  }
-}
-
-function yzStartNewOrder() {
-  yzCurrentOrderId = null;
-  yzCurrentOrderTotal = 0;
-
-  localStorage.removeItem("latestOrderId");
-  localStorage.removeItem("latestOrderTotal");
-
-  document.getElementById("paymentMethod").value = "";
-  document.getElementById("paymentStatus").innerHTML = "";
-  document.getElementById("checkoutStatus").innerHTML = "";
-  document.getElementById("historyList").innerHTML = "";
-
-  const cartHistoryList = document.getElementById("cartHistoryList");
-  if (cartHistoryList) {
-    cartHistoryList.innerHTML = "";
-    cartHistoryList.dataset.open = "false";
-  }
-
-  switchTab("browse");
-  yzShowPage("cart");
-}
-
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-updateSessionUI();
-loadStalls();
-if(officer_token){showOperatorTab();}
-</script>
+<script src="script.js"></script>
 </body>
 </html>
