@@ -652,7 +652,38 @@
             <button class="btn-secondary" onclick="toggleInspectionHistory()">View History</button>
             <button class="btn-primary" onclick="toggleAddInspection()">Add Inspection</button>
           </div>
-          <div id="inspectionHistory" style="display:none;"></div>
+          <div id="inspectionHistory" style="display:none;">
+            <div class="filter-row">
+              <div>
+                <label>Stall</label>
+                <select id="inspFilterStall" onchange="renderInspectionHistory()"><option value="">All Stalls</option></select>
+              </div>
+              <div>
+                <label>Grade</label>
+                <select id="inspFilterGrade" onchange="renderInspectionHistory()">
+                  <option value="">All Grades</option>
+                  <option value="A">Grade A</option>
+                  <option value="B">Grade B</option>
+                  <option value="C">Grade C</option>
+                  <option value="D">Grade D</option>
+                </select>
+              </div>
+              <div>
+                <label>Officer</label>
+                <select id="inspFilterOfficer" onchange="renderInspectionHistory()"><option value="">All Officers</option></select>
+              </div>
+              <div>
+                <label>Sort By</label>
+                <select id="inspSortBy" onchange="renderInspectionHistory()">
+                  <option value="date_desc">Newest</option>
+                  <option value="date_asc">Oldest</option>
+                  <option value="grade_best">Best to Worst</option>
+                  <option value="grade_worst">Worst to Best</option>
+                </select>
+              </div>
+            </div>
+            <div id="inspectionHistoryList"></div>
+          </div>
           <div class="card" id="addInspectionPanel" style="display:none;">
             <h3>Add Inspection</h3>
             <select id="inspectionStall"><option value="">-- Select a stall --</option></select>

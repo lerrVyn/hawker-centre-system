@@ -34,6 +34,8 @@ let currentOrderTotal = Number(localStorage.getItem("latestOrderTotal")) || 0;
 let editingMenuId = null;
 let ownerStalls = []; // stalls owned by the logged-in owner
 
+let allInspections = [];
+
 // ══════════════════════════════════════════════════════════════════
 // SCREEN NAVIGATION
 // ══════════════════════════════════════════════════════════════════
@@ -299,10 +301,62 @@ function openStore(stallId, stallName, cuisine, imageUrl) {
 
   const banner = document.getElementById("storeBanner");
   banner.style.backgroundImage = imageUrl ? `url('${imageUrl}')` : "";
-  banner.innerHTML = `${stallName}<span class="cuisine-tag">${cuisine || "Hawker Stall"}</span>`;
+  banner.innerHTML = `
+    ${stallName}<span class="cuisine-tag">${cuisine || "Hawker Stall"}</span>
+    <div id="storeGradeBadge" class="store-grade-badge" style="display:none;"></div>
+  `;
 
   setStoreTab("menu");
   loadStoreMenu(stallId);
+  loadStoreGradeBadge(stallId);
+}
+
+async function loadStoreGradeBadge(stallId) {
+  const badge = document.getElementById("storeGradeBadge");
+  if (!badge) return;
+
+  try {
+    const [inspectionRes, gradeRes] = await Promise.all([fetch(`${API}/inspection`), fetch(`${API}/grade`)]);
+    const inspections = await inspectionRes.json();
+    const grades = await gradeRes.json();
+
+    const inspectionMap = {};
+    (Array.isArray(inspections) ? inspections : []).forEach(i => { inspectionMap[i.inspection_id] = i; });
+
+    let history = (Array.isArray(grades) ? grades : []).filter(g => {
+      const inspection = inspectionMap[g.inspection_id];
+      return inspection && inspection.stall_id == stallId;
+    }).map(g => ({ ...g, inspection_date: inspectionMap[g.inspection_id].inspection_date }));
+
+    if (history.length === 0) return; // no grade recorded yet — leave the corner empty
+
+    history.sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date));
+    const current = history[0];
+    const previous = history[1];
+
+    // Same colour scheme as the owner dashboard's hygiene grade page, for consistency.
+    const gradeColours = { A: "#28c76f", B: "#7367f0", C: "#ff9f43", D: "#ea5455" };
+    const gradeRank = { A: 4, B: 3, C: 2, D: 1 };
+
+    let arrowHtml = "";
+    if (previous && gradeRank[current.grade] && gradeRank[previous.grade]) {
+      const diff = gradeRank[current.grade] - gradeRank[previous.grade];
+      if (diff > 0) arrowHtml = `<span class="grade-arrow" style="color:#28c76f;">▲</span>`;
+      else if (diff < 0) arrowHtml = `<span class="grade-arrow" style="color:#ea5455;">▼</span>`;
+      else arrowHtml = `<span class="grade-arrow" style="color:#999;">=</span>`;
+    }
+
+    badge.innerHTML = `
+      <div class="grade-row">
+        <span class="grade-letter" style="color:${gradeColours[current.grade] || "#999"}">${current.grade}</span>
+        ${arrowHtml}
+      </div>
+      <div class="grade-label">Hygiene Grade</div>
+    `;
+    badge.style.display = "flex";
+  } catch (err) {
+    console.error("Unable to load hygiene grade badge:", err);
+  }
 }
 
 function setStoreTab(tab) {
@@ -1456,14 +1510,66 @@ function officerNav(page) {
 async function loadInspectionHistory() {
   const res = await fetch(`${API}/inspection`);
   if (!res.ok) {
-    document.getElementById("inspectionHistory").innerHTML = "Unable to load inspection history.";
+    document.getElementById("inspectionHistoryList").innerHTML = "Unable to load inspection history.";
     return;
   }
-  const inspections = await res.json();
-  inspections.sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date));
+  allInspections = await res.json();
+  if (!Array.isArray(allInspections)) allInspections = [];
 
-  document.getElementById("inspectionHistory").innerHTML = inspections.map(i => `
-    <div class="feedback-entry">
+  populateInspectionFilterOptions();
+  renderInspectionHistory();
+}
+
+function populateInspectionFilterOptions() {
+  const stallSelect = document.getElementById("inspFilterStall");
+  const officerSelect = document.getElementById("inspFilterOfficer");
+  const prevStall = stallSelect.value;
+  const prevOfficer = officerSelect.value;
+
+  const stallNames = [...new Set(allInspections.map(i => i.stall_name ?? i.stall_id))].sort();
+  const officerNames = [...new Set(allInspections.map(i => i.officer_name ?? i.officer_id))].sort();
+
+  stallSelect.innerHTML = '<option value="">All Stalls</option>' +
+    stallNames.map(name => `<option value="${name}">${name}</option>`).join("");
+  officerSelect.innerHTML = '<option value="">All Officers</option>' +
+    officerNames.map(name => `<option value="${name}">${name}</option>`).join("");
+
+  stallSelect.value = prevStall;
+  officerSelect.value = prevOfficer;
+}
+
+function renderInspectionHistory() {
+  const stallFilter = document.getElementById("inspFilterStall").value;
+  const gradeFilter = document.getElementById("inspFilterGrade").value;
+  const officerFilter = document.getElementById("inspFilterOfficer").value;
+  const sortBy = document.getElementById("inspSortBy").value;
+
+  let filtered = allInspections.filter(i => {
+    if (stallFilter && String(i.stall_name ?? i.stall_id) !== stallFilter) return false;
+    if (gradeFilter && i.grade !== gradeFilter) return false;
+    if (officerFilter && String(i.officer_name ?? i.officer_id) !== officerFilter) return false;
+    return true;
+  });
+
+  const gradeRank = { A: 4, B: 3, C: 2, D: 1 };
+  if (sortBy === "date_desc") {
+    filtered.sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date));
+  } else if (sortBy === "date_asc") {
+    filtered.sort((a, b) => new Date(a.inspection_date) - new Date(b.inspection_date));
+  } else if (sortBy === "grade_best") {
+    filtered.sort((a, b) => (gradeRank[b.grade] || 0) - (gradeRank[a.grade] || 0));
+  } else if (sortBy === "grade_worst") {
+    filtered.sort((a, b) => (gradeRank[a.grade] || 0) - (gradeRank[b.grade] || 0));
+  }
+
+  const listEl = document.getElementById("inspectionHistoryList");
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<p class="muted">No inspections match these filters.</p>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(i => `
+    <div class="inspection-entry">
       <b>Inspection #${i.inspection_id}</b>
       <p><b>Stall:</b> ${i.stall_name ?? i.stall_id}</p>
       <p><b>Officer:</b> ${i.officer_name ?? i.officer_id}</p>
