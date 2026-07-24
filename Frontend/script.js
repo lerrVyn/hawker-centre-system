@@ -337,6 +337,30 @@ function openCustomerAccount() {
   custNav("account");
 }
 
+function openChangePassword() {
+  closeCustomerProfileMenu();
+  custNav("account");
+
+  setTimeout(() => {
+    const passwordCard =
+      document.getElementById("changePasswordCard");
+
+    if (passwordCard) {
+      passwordCard.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+      const currentPasswordInput =
+        document.getElementById("currentPassword");
+
+      if (currentPasswordInput) {
+        currentPasswordInput.focus();
+      }
+    }
+  }, 100);
+}
+
 function updateCustomerHeader() {
   const name = customerName || "Customer";
 
@@ -910,6 +934,93 @@ async function saveCustomerProfile() {
     setTimeout(() => { document.getElementById("profileStatus").innerHTML = ""; }, 3000);
   } catch (err) {
     showStatus("profileStatus", err.message, false);
+  }
+}
+
+async function changeCustomerPassword() {
+  const currentPassword =
+    document.getElementById("currentPassword").value;
+
+  const newPassword =
+    document.getElementById("newPassword").value;
+
+  const confirmPassword =
+    document.getElementById("confirmPassword").value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showStatus(
+      "passwordStatus",
+      "Please fill in all password fields.",
+      false
+    );
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showStatus(
+      "passwordStatus",
+      "The new passwords do not match.",
+      false
+    );
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    showStatus(
+      "passwordStatus",
+      "The new password must be at least 8 characters.",
+      false
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${API}/profile/customer/customer/password`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        "Unable to change password."
+      );
+    }
+
+    showStatus(
+      "passwordStatus",
+      "Password changed successfully!",
+      true
+    );
+
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+
+    setTimeout(() => {
+      document.getElementById("passwordStatus").innerHTML = "";
+    }, 3000);
+
+  } catch (err) {
+    showStatus(
+      "passwordStatus",
+      err.message,
+      false
+    );
   }
 }
 

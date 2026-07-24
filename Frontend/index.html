@@ -372,19 +372,68 @@
 
       <!-- ACCOUNT -->
       <div class="cust-page" id="cust-page-account">
-        <div class="card">
-          <h3>My Profile</h3>
-          <label>Name</label>
-          <input id="profileName" type="text">
-          <label>Email</label>
-          <input id="profileEmail" type="email">
-          <label>Phone</label>
-          <input id="profilePhone" type="text" maxlength="8">
-          <button class="btn-primary" onclick="saveCustomerProfile()">Save Changes</button>
-          <div id="profileStatus"></div>
-        </div>
-        <button class="btn-secondary btn-block" onclick="customerLogout()">Logout</button>
-      </div>
+
+  <div class="card">
+    <h3>My Profile</h3>
+
+    <label>Name</label>
+    <input id="profileName" type="text">
+
+    <label>Email</label>
+    <input id="profileEmail" type="email">
+
+    <label>Phone</label>
+    <input id="profilePhone" type="text" maxlength="8">
+
+    <button
+      class="btn-primary"
+      onclick="saveCustomerProfile()">
+      Save Changes
+    </button>
+
+    <div id="profileStatus"></div>
+  </div>
+
+  <div class="card" id="changePasswordCard">
+    <h3>Change Password</h3>
+
+    <label>Current Password</label>
+    <input
+      id="currentPassword"
+      type="password"
+      placeholder="Enter current password"
+    >
+
+    <label>New Password</label>
+    <input
+      id="newPassword"
+      type="password"
+      placeholder="Enter new password"
+    >
+
+    <label>Confirm New Password</label>
+    <input
+      id="confirmPassword"
+      type="password"
+      placeholder="Confirm new password"
+    >
+
+    <button
+      class="btn-primary"
+      onclick="changeCustomerPassword()">
+      Change Password
+    </button>
+
+    <div id="passwordStatus"></div>
+  </div>
+
+  <button
+    class="btn-secondary btn-block"
+    onclick="customerLogout()">
+    Logout
+  </button>
+
+</div>
 
     </main>
 
