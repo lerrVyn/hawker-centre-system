@@ -94,19 +94,180 @@
   <div class="cust-shell">
 
     <header class="cust-topbar">
-      <button class="cust-back-btn" id="custBackBtn" onclick="custBack()" style="visibility:hidden;">←</button>
-      <h1 id="custPageTitle">Stalls</h1>
-      <div class="cust-cart-chip" onclick="custNav('cart')">
-        🛒 <span id="custCartCount">0</span>
+
+  <div class="cust-topbar-left">
+    <button
+      class="cust-back-btn"
+      id="custBackBtn"
+      onclick="custBack()"
+      style="visibility:hidden;">
+      ←
+    </button>
+
+    <div class="cust-brand" onclick="custNav('home')">
+      <span class="cust-brand-icon">🍜</span>
+      <span>Hawker Centre</span>
+    </div>
+  </div>
+
+  <nav class="cust-desktop-nav">
+    <button
+      class="cust-header-link active"
+      data-page="home"
+      onclick="custNav('home')">
+      Home
+    </button>
+
+    <button
+      class="cust-header-link"
+      data-page="orders"
+      onclick="custNav('orders')">
+      My Orders
+    </button>
+
+    <button
+      class="cust-header-link"
+      data-page="cart"
+      onclick="custNav('cart')">
+      Cart
+    </button>
+  </nav>
+
+  <div class="cust-topbar-right">
+
+    <button
+      class="cust-cart-chip"
+      onclick="custNav('cart')">
+      🛒
+      <span id="custCartCount">0</span>
+    </button>
+
+    <div class="cust-profile-menu">
+
+      <button
+        class="cust-profile-chip"
+        onclick="toggleCustomerProfileMenu()">
+
+        <div class="cust-profile-avatar">
+          👤
+        </div>
+
+        <div class="cust-profile-text">
+          <span class="cust-profile-label">Customer</span>
+          <strong id="custHeaderName">Ziying</strong>
+        </div>
+
+        <span class="cust-profile-arrow">▾</span>
+      </button>
+
+      <div
+        class="cust-profile-dropdown"
+        id="custProfileDropdown">
+
+        <button onclick="openCustomerAccount()">
+          👤 My Profile
+        </button>
+
+        <button onclick="openChangePassword()">
+          🔒 Change Password
+        </button>
+
+        <button onclick="custNav('orders')">
+          🧾 Order History
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button
+          class="dropdown-logout"
+          onclick="customerLogout()">
+          🚪 Logout
+        </button>
+
       </div>
-    </header>
+    </div>
+
+  </div>
+</header>
 
     <main class="cust-content">
 
+      <div class="cust-page-heading">
+        <div>
+          <p class="cust-page-eyebrow">Customer Portal</p>
+          <h1 id="custPageTitle">Discover Hawker Stalls</h1>
+        </div>
+      </div>
+
       <!-- HOME: store grid -->
       <div class="cust-page active" id="cust-page-home">
-        <div class="store-grid" id="storeGrid"></div>
+
+  <section class="cust-welcome-banner">
+    <div>
+      <p class="welcome-small">Welcome back</p>
+      <h2>
+        Hello, <span id="custWelcomeName">Ziying</span> 👋
+      </h2>
+      <p>
+        Discover local hawker favourites and place your next order.
+      </p>
+    </div>
+
+    <button
+      class="btn-primary"
+      onclick="document.getElementById('storeSection').scrollIntoView({
+        behavior: 'smooth'
+      })">
+      Browse Stalls
+    </button>
+  </section>
+
+  <section class="cust-quick-actions">
+
+    <button
+      class="quick-action-card"
+      onclick="custNav('cart')">
+      <span class="quick-action-icon">🛒</span>
+      <span>
+        <strong>My Cart</strong>
+        <small>Review your selected food</small>
+      </span>
+    </button>
+
+    <button
+      class="quick-action-card"
+      onclick="custNav('orders')">
+      <span class="quick-action-icon">🧾</span>
+      <span>
+        <strong>Order History</strong>
+        <small>View your previous orders</small>
+      </span>
+    </button>
+
+    <button
+      class="quick-action-card"
+      onclick="openCustomerAccount()">
+      <span class="quick-action-icon">👤</span>
+      <span>
+        <strong>My Account</strong>
+        <small>Manage your profile</small>
+      </span>
+    </button>
+
+  </section>
+
+  <section id="storeSection">
+    <div class="section-heading">
+      <div>
+        <p class="section-eyebrow">Explore</p>
+        <h2>Hawker Stalls</h2>
       </div>
+    </div>
+
+    <div class="store-grid" id="storeGrid"></div>
+  </section>
+
+</div>
 
       <!-- STORE: menu / reviews / complaints -->
       <div class="cust-page" id="cust-page-store">
@@ -229,10 +390,39 @@
 
 <nav class="cust-bottom-nav">
   <div class="cust-bottom-nav-inner">
-    <div class="cust-nav-item active" data-page="home" onclick="custNav('home')"><span>🏠</span>Home</div>
-    <div class="cust-nav-item" data-page="cart" onclick="custNav('cart')"><span>🛒</span>Cart</div>
-    <div class="cust-nav-item" data-page="orders" onclick="custNav('orders')"><span>🧾</span>Orders</div>
-    <div class="cust-nav-item" data-page="account" onclick="custNav('account')"><span>👤</span>Account</div>
+
+    <div
+      class="cust-nav-item active"
+      data-page="home"
+      onclick="custNav('home')">
+      <span>🏠</span>
+      Home
+    </div>
+
+    <div
+      class="cust-nav-item"
+      data-page="cart"
+      onclick="custNav('cart')">
+      <span>🛒</span>
+      Cart
+    </div>
+
+    <div
+      class="cust-nav-item"
+      data-page="orders"
+      onclick="custNav('orders')">
+      <span>🧾</span>
+      Orders
+    </div>
+
+    <div
+      class="cust-nav-item"
+      data-page="account"
+      onclick="openCustomerAccount()">
+      <span>👤</span>
+      Account
+    </div>
+
   </div>
 </nav>
 

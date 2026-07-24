@@ -303,3 +303,462 @@ label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; 
   .dash-content { padding: 18px 16px 50px; }
   .dash-topbar { padding: 14px 16px; }
 }
+/* ================================================================
+   CUSTOMER DESKTOP APP REDESIGN
+================================================================ */
+
+.cust-shell {
+  min-height: 100vh;
+  padding-bottom: 0;
+  background: #f8f6f2;
+}
+
+/* Main customer header */
+.cust-topbar {
+  min-height: 72px;
+  padding: 0 34px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
+  gap: 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-shadow: 0 2px 10px rgba(30, 20, 10, 0.04);
+}
+
+.cust-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cust-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cust-brand-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--cust-soft);
+  font-size: 21px;
+}
+
+.cust-back-btn {
+  background: transparent;
+  font-size: 20px;
+  color: var(--text);
+  padding: 8px;
+  border-radius: 9px;
+}
+
+.cust-back-btn:hover {
+  background: var(--cust-soft);
+}
+
+/* Desktop links */
+.cust-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cust-header-link {
+  padding: 10px 15px;
+  background: transparent;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cust-header-link:hover {
+  color: var(--cust-dark);
+  background: var(--cust-soft);
+}
+
+.cust-header-link.active {
+  color: white;
+  background: var(--cust);
+}
+
+/* Right side */
+.cust-topbar-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.cust-cart-chip {
+  min-height: 42px;
+  padding: 9px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 12px;
+  background: var(--cust-soft);
+  color: var(--cust-dark);
+}
+
+/* Profile dropdown */
+.cust-profile-menu {
+  position: relative;
+}
+
+.cust-profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 12px 6px 7px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.cust-profile-chip:hover {
+  border-color: #f4b395;
+  background: #fffaf7;
+}
+
+.cust-profile-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--cust-soft);
+  font-size: 18px;
+}
+
+.cust-profile-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.cust-profile-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cust-profile-text strong {
+  max-width: 130px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.cust-profile-arrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cust-profile-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 210px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-hover);
+  z-index: 50;
+}
+
+.cust-profile-dropdown.show {
+  display: block;
+}
+
+.cust-profile-dropdown button {
+  width: 100%;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.cust-profile-dropdown button:hover {
+  background: var(--cust-soft);
+  color: var(--cust-dark);
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: 6px 2px;
+  background: var(--border);
+}
+
+.cust-profile-dropdown .dropdown-logout {
+  color: var(--danger);
+}
+
+/* Customer content */
+.cust-content {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 30px 34px 60px;
+}
+
+.cust-page-heading {
+  margin-bottom: 22px;
+}
+
+.cust-page-heading h1 {
+  font-size: 27px;
+  line-height: 1.2;
+}
+
+.cust-page-eyebrow,
+.section-eyebrow,
+.welcome-small {
+  margin-bottom: 3px;
+  color: var(--cust-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* Welcome banner */
+.cust-welcome-banner {
+  min-height: 210px;
+  margin-bottom: 22px;
+  padding: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 86% 20%, rgba(255,255,255,0.5), transparent 28%),
+    linear-gradient(135deg, #ffd7c1, #fff0e7);
+  border: 1px solid #f7d4c2;
+}
+
+.cust-welcome-banner::after {
+  content: "🍜";
+  position: absolute;
+  right: 115px;
+  bottom: -34px;
+  font-size: 150px;
+  opacity: 0.17;
+  transform: rotate(-8deg);
+}
+
+.cust-welcome-banner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cust-welcome-banner h2 {
+  margin-bottom: 7px;
+  font-size: 31px;
+}
+
+.cust-welcome-banner p:not(.welcome-small) {
+  max-width: 520px;
+  color: #6f6259;
+}
+
+/* Quick actions */
+.cust-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.quick-action-card {
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  text-align: left;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.quick-action-icon {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--cust-soft);
+  font-size: 22px;
+}
+
+.quick-action-card span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quick-action-card strong {
+  font-size: 14px;
+}
+
+.quick-action-card small {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.section-heading {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.section-heading h2 {
+  font-size: 21px;
+}
+
+/* Account page */
+#cust-page-account {
+  max-width: 780px;
+}
+
+#cust-page-account .card {
+  padding: 25px;
+}
+
+#cust-page-account .btn-secondary.btn-block {
+  max-width: 220px;
+}
+
+/* Desktop should use the top header */
+@media (min-width: 769px) {
+  .cust-bottom-nav {
+    display: none;
+  }
+}
+
+/* Tablet and mobile */
+@media (max-width: 900px) {
+  .cust-topbar {
+    grid-template-columns: 1fr auto;
+    padding: 12px 18px;
+  }
+
+  .cust-desktop-nav {
+    display: none;
+  }
+
+  .cust-profile-text,
+  .cust-profile-arrow {
+    display: none;
+  }
+
+  .cust-profile-chip {
+    padding-right: 7px;
+  }
+
+  .cust-content {
+    padding: 22px 20px 90px;
+  }
+
+  .cust-quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .cust-shell {
+    padding-bottom: 74px;
+  }
+
+  .cust-topbar {
+    min-height: 62px;
+  }
+
+  .cust-brand span:last-child {
+    display: none;
+  }
+
+  .cust-welcome-banner {
+    min-height: 230px;
+    padding: 26px 22px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cust-welcome-banner h2 {
+    font-size: 25px;
+  }
+
+  .cust-welcome-banner::after {
+    right: -10px;
+    bottom: -15px;
+    font-size: 120px;
+  }
+
+  .cust-page-heading h1 {
+    font-size: 23px;
+  }
+
+  .cust-bottom-nav {
+    display: flex;
+  }
+}
+
+@media (max-width: 520px) {
+  .cust-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .cust-content {
+    padding: 18px 14px 88px;
+  }
+
+  .cust-cart-chip {
+    padding: 8px 11px;
+  }
+
+  .cust-welcome-banner {
+    border-radius: 17px;
+  }
+
+  .store-grid,
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}

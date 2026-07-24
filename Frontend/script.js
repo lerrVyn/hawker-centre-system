@@ -167,8 +167,10 @@ function customerLogout() {
 
 function enterCustomerApp() {
   goScreen("customer-app");
+  updateCustomerHeader();
   custNav("home");
   loadStores();
+  updateCartBadge();
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -235,20 +237,49 @@ async function handleStaffAuth() {
 // CUSTOMER APP: NAVIGATION
 // ══════════════════════════════════════════════════════════════════
 function custNav(page) {
-  document.querySelectorAll(".cust-nav-item").forEach(n => n.classList.remove("active"));
-  const navItem = document.querySelector(`.cust-nav-item[data-page="${page}"]`);
-  if (navItem) navItem.classList.add("active");
+  closeCustomerProfileMenu();
 
-  document.querySelectorAll(".cust-page").forEach(p => p.classList.remove("active"));
-  document.getElementById(`cust-page-${page}`).classList.add("active");
+  document
+    .querySelectorAll(".cust-nav-item, .cust-header-link")
+    .forEach(n => n.classList.remove("active"));
 
-  const titles = { home: "Stalls", cart: "Your Cart", orders: "Your Orders", account: "Account" };
-  document.getElementById("custPageTitle").textContent = titles[page] || "";
-  document.getElementById("custBackBtn").style.visibility = "hidden";
+  document
+    .querySelectorAll(`[data-page="${page}"]`)
+    .forEach(item => item.classList.add("active"));
 
-  if (page === "cart") { showCartStage("cart"); loadCart(); }
-  if (page === "orders") loadOrderHistory();
-  if (page === "account") loadCustomerProfile();
+  document
+    .querySelectorAll(".cust-page")
+    .forEach(p => p.classList.remove("active"));
+
+  document
+    .getElementById(`cust-page-${page}`)
+    .classList.add("active");
+
+  const titles = {
+    home: "Discover Hawker Stalls",
+    cart: "Your Cart",
+    orders: "Your Orders",
+    account: "My Account"
+  };
+
+  document.getElementById("custPageTitle").textContent =
+    titles[page] || "";
+
+  document.getElementById("custBackBtn").style.visibility =
+    "hidden";
+
+  if (page === "cart") {
+    showCartStage("cart");
+    loadCart();
+  }
+
+  if (page === "orders") {
+    loadOrderHistory();
+  }
+
+  if (page === "account") {
+    loadCustomerProfile();
+  }
 }
 
 function custBack() {
@@ -284,6 +315,53 @@ function setStoreTab(tab) {
   if (tab === "reviews") loadStoreReviews();
   if (tab === "complaints") loadStoreComplaints();
 }
+
+function toggleCustomerProfileMenu() {
+  const dropdown = document.getElementById("custProfileDropdown");
+
+  if (dropdown) {
+    dropdown.classList.toggle("show");
+  }
+}
+
+function closeCustomerProfileMenu() {
+  const dropdown = document.getElementById("custProfileDropdown");
+
+  if (dropdown) {
+    dropdown.classList.remove("show");
+  }
+}
+
+function openCustomerAccount() {
+  closeCustomerProfileMenu();
+  custNav("account");
+}
+
+function updateCustomerHeader() {
+  const name = customerName || "Customer";
+
+  const headerName = document.getElementById("custHeaderName");
+  const welcomeName = document.getElementById("custWelcomeName");
+
+  if (headerName) {
+    headerName.textContent = name;
+  }
+
+  if (welcomeName) {
+    welcomeName.textContent = name;
+  }
+}
+
+document.addEventListener("click", function (event) {
+  const profileMenu = document.querySelector(".cust-profile-menu");
+
+  if (
+    profileMenu &&
+    !profileMenu.contains(event.target)
+  ) {
+    closeCustomerProfileMenu();
+  }
+});
 
 // ══════════════════════════════════════════════════════════════════
 // HOME: STORE GRID
@@ -826,6 +904,7 @@ async function saveCustomerProfile() {
 
     customerName = name;
     localStorage.setItem("customer_name", name);
+    updateCustomerHeader();
 
     showStatus("profileStatus", "Profile updated!", true);
     setTimeout(() => { document.getElementById("profileStatus").innerHTML = ""; }, 3000);
